@@ -1,0 +1,23 @@
+{
+  "name": "mimedevice-js",
+  "version": "0.0.1",
+  "description": "A base library that handles the protocol used in Mime Industries products (Mirobot and MeArm)",
+  "main": "mimedevice.js",
+  "scripts": {
+    "test": "test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mimeindustries/mimedevice-frontend-js.git"
+  },
+  "keywords": [
+    "Mime Industries",
+    "Robot"
+  ],
+  "author": "Mime Industries",
+  "homepage": "http://mime.co.uk",
+  "devDependencies": {
+  },
+  "dependencies": {
+  }
+}
