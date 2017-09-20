@@ -8,12 +8,12 @@ module.exports = function(grunt) {
         separator: '\n',
       },
       mearm: {
-        src: ['mimedevice.js', 'mearm.js'],
-        dest: 'build/mearm.js',
+        src: ['src/device-libs/mimedevice.js', 'src/device-libs/mearm.js'],
+        dest: 'build/device-libs/mearm.js',
       },
       mirobot: {
-        src: ['mimedevice.js', 'mirobot.js'],
-        dest: 'build/mirobot.js',
+        src: ['src/device-libs/mimedevice.js', 'src/device-libs/mirobot.js'],
+        dest: 'build/device-libs/mirobot.js',
       },
     },
     uglify: {
@@ -22,8 +22,8 @@ module.exports = function(grunt) {
       },
       build: {
         files: {
-          'build/mearm.min.js': ['build/mearm.js'],
-          'build/mirobot.min.js': ['build/mirobot.js']
+          'build/device-libs/mearm.min.js': ['build/device-libs/mearm.js'],
+          'build/device-libs/mirobot.min.js': ['build/device-libs/mirobot.js']
         }
       }
     },

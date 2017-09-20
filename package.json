@@ -1,14 +1,14 @@
 {
-  "name": "mimedevice-js",
+  "name": "mime-app-libs",
   "version": "0.0.1",
-  "description": "A library that handles the protocol used in Mime Industries products (Mirobot and MeArm)",
+  "description": "A collection of libraries that are used to build the apps for Mirobot and MeArm",
   "main": "mimedevice.js",
   "scripts": {
     "test": "test.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mimeindustries/mimedevice-frontend-js.git"
+    "url": "https://github.com/mimeindustries/mime-app-libs.git"
   },
   "keywords": [
     "Mime Industries",
