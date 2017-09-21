@@ -227,4 +227,8 @@ var MimeDevice = function(url){
   
   this.addCmd('ping');
   this.addCmd('version');
+  this.addCmd('getConfig');
+  this.addCmd('setConfig');
+  this.addCmd('resetConfig');
+  this.addCmd('startWifiScan');
 }

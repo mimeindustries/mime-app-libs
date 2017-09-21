@@ -1,4 +1,4 @@
-var Mearm = function(url){
+var MeArm = function(url){
   MimeDevice.call(this, url);
 
   this.addCmd('openGrip');

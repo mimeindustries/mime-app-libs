@@ -1,0 +1,163 @@
+.editor{
+  display:block;
+  min-width:600px;
+  
+  ol{
+    list-style-type:none;
+    padding:0;
+    margin:0;
+  }
+  .left{
+    width:300px;
+    float: left;
+  }
+  .functionList{
+    vertical-align:top;
+    background:#EEE;
+    border:1px solid #888;
+    padding:10px;
+  }
+  input[type='number']{
+    width:50px;
+  }
+  .container h2{
+    background:#888;
+    padding:5px;
+    margin:0;
+    color:#FFF;
+  }
+  .right{
+    border:1px solid #888;
+    margin-left:310px;
+    max-width:600px;
+    position:relative;
+  }
+  .programWrapper{
+    overflow:auto;
+  }
+  .buttons{
+    position:absolute;
+    padding:0;
+    bottom:0;
+    width:100%;
+
+    button{
+      color:#FFF;
+      font-size:1.5em;
+      padding:5px;
+      height:40px;
+      vertical-align:top;
+      border:none;
+      width:33.33%;
+      display:inline-block;
+      font-weight:bold;
+      margin:0;
+      background:#BBB;
+    }
+    button:focus{
+      outline-width: 0;
+    }
+
+    .run{ background-color:#33D121 }
+    .run:hover{ background-color:#2CAD1D }
+    .run:active{ background-color:#218216 }
+
+    .stop{ background-color:#888 }
+    .stop:hover{ background-color:#444 }
+    .stop:active{ background-color:#000 }
+
+    .clear{ background-color:#BBB }
+    .clear:hover{ background-color:#777 }
+    .clear:active{ background-color:#444 }
+
+    .disabled{ background-color:#BBB }
+    .disabled:hover{ background-color:#BBB }
+  }
+
+  .editor.notReady .buttons .run{ background-color:#BBB }
+  .editor.notReady .buttons .stop{ background-color:#AAA }
+
+  .program{
+    overflow:hidden;
+    min-width:300px;
+    min-height:100%;
+    vertical-align:top;
+    padding:10px;
+
+    .hint{
+      text-align:center;
+      border:1px dashed #888;
+      display:block;
+      padding:10px;
+      min-height:1.5em;
+      color:#CCC;
+    }
+  }
+  
+  .functionList .hint{
+    display:none;
+  }
+  
+  .function{
+    background:#FFF;
+    border:1px solid #888;
+    padding:10px;
+    min-height:1.5em;
+  }
+  .program .function.running{
+    background:#F00;
+  }
+  .functionList .function{
+    -webkit-box-shadow: 12px 12px 12px -5px rgba(0,0,0,0.5);
+    -moz-box-shadow: 12px 12px 12px -5px rgba(0,0,0,0.5);
+    box-shadow: 12px 12px 12px -5px rgba(0,0,0,0.5);
+    margin:0 0 10px;
+  }
+  .fn-repeat ol{
+    min-height:1.5em;
+    border:1px solid #888;
+  }
+  .dragged {
+    position: absolute;
+    opacity: 0.5;
+    z-index: 2000;
+  }
+  .placeholder {
+    position: relative;
+    border:1px dashed #888;
+    display:block;
+    padding:10px;
+    min-height:1.5em;
+  }
+  ol.program li.function.active{
+    background-color:#0F0;
+  }
+
+  .extra{
+    padding:10px;
+
+    button{
+      display:block;
+      margin:0 0 10px 0;
+      background: #FFF;
+      border: 1px #888 solid;
+      padding:5px;
+      min-width:160px;
+      text-align:center;
+      min-height:3em;
+    }
+    button:active{
+      background: #DDD;
+    }
+    button:hover{
+      background: #EEE;
+    }
+    button:focus{
+      outline: 0;
+    }
+  }
+}
+
+body.dragging, body.dragging * {
+  cursor: move !important;
+}

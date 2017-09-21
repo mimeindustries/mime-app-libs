@@ -229,7 +229,7 @@ var MimeDevice = function(url){
   this.addCmd('version');
 }
 
-var Mearm = function(url){
+var MeArm = function(url){
   MimeDevice.call(this, url);
 
   this.addCmd('openGrip');

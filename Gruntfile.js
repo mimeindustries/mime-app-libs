@@ -35,7 +35,6 @@ module.exports = function(grunt) {
   // Load the plugins
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-concat');
-  grunt.loadNpmTasks('grunt-contrib-jshint');
 
   // Default task
   grunt.registerTask('default', ['concat:mearm', 'concat:mirobot', 'uglify']);
