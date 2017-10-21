@@ -1,5 +1,6 @@
 WiFiConfigMenu = function(el, device, options){
   var self = this;
+  var networks = {};
 
   this.init = function(){
     var container = document.querySelector(el);
@@ -7,7 +8,6 @@ WiFiConfigMenu = function(el, device, options){
     this.el = container.querySelector('#config');
     
     this.device = device;
-    this.networks = undefined;
     this.device.addEventListener('network', function(c){ self.configHandler(c) });
     this.device.addEventListener('wifiScan', function(c){ self.scanHandler(c) });
     this.device.addEventListener('connectedStateChange', function(m){ 
@@ -27,17 +27,19 @@ WiFiConfigMenu = function(el, device, options){
   }
 
   this.scanHandler = function(result){
-    this.networks = result;
+    for(var i in result){
+      networks[result[i][0]] = result[i];
+    }
     this.updateMenu();
   }
   
   this.initMenu = function(){
-    this.el.innerHTML += '<div class="wrapper"><ul class="subMenu"><li><table><tr><td>' + l(':net-wifi') + ':</td><td><select id="staSsid"></select></td></tr><tr><td>' + l(':password') + ':</td><td><input id="staPass" type="password" /></td></tr><tr><td colspan="2"><p class="small">' + l(':ip') + ': <span class="ip"></span></p></td></table></li>\
-<li class="advanced hidden"><table><tr><td colspan="2"><h4>' + l(':net-settings') + '</h4></td></tr><tr><td>' + l(':dhcp') + ':</td><td><input id="staDhcp" type="checkbox" checked="checked" /></td></tr>\
-<tbody id="manualNet" class="hidden"><tr><td>' + l(':ip') + ':</td><td><input id="staFixedIp" type="text" /></td></tr><tr><td>' + l(':gw') + ':</td><td><input id="staFixedGateway" type="text" /></td></tr><tr><td>' + l(':nm') + ':</td><td><input id="staFixedNetmask" type="text" placeholder="255.255.255.0" /></td></tr><tr><td>' + l(':dns') + ' 1:</td><td><input id="staFixedDns1" type="text" /></td></tr><tr><td>' + l(':dns') + ' 2:</td><td><input id="staFixedDns2" type="text" /></td></tr></tbody>\
-<tr><td colspan="2"><h4>' + l(':ap-settings') + '</h4></td></tr><tr><td>' + l(':ap-name') + ':</td><td><input id="apSsid" type="text" /></td></tr><tr><td>' + l(':pass-prot') + ':</td><td><input id="apProtected" type="checkbox" /></td></tr><tbody id="apPassword" class="hidden"><tr><td>' + l(':password') + ':</td><td><input id="apPass" type="text" /></td></tr></tbody>\
-<tr><td colspan="2"><h4>Discovery</h4></td></tr><tr><td>' + l(':enable-disc') + ':</td><td><input id="discovery" type="checkbox" /></td></table></li>\
-<li><button class="saveConfig">' + l(':save') + '</button><a class="showAdvanced" href="#">' + l(':advanced') + '</a> <button class="resetConfig hidden">' + l(':reset-settings') + '</button></li></ul></div>';
+    this.el.innerHTML += '<div class="wrapper"><ul class="subMenu"><li><table><tr><td>' + l(':net-wifi', 'WiFi Network') + ':</td><td><select id="staSsid"></select></td></tr><tr><td>' + l(':password', 'Password') + ':</td><td><input id="staPass" type="password" /></td></tr><tr><td colspan="2"><p class="small">' + l(':ip', 'IP Address') + ': <span class="ip"></span></p></td></table></li>\
+<li class="advanced hidden"><table><tr><td colspan="2"><h4>' + l(':net-settings', 'Network Settings') + '</h4></td></tr><tr><td>' + l(':dhcp', 'Use DHCP') + ':</td><td><input id="staDhcp" type="checkbox" checked="checked" /></td></tr>\
+<tbody id="manualNet" class="hidden"><tr><td>' + l(':ip', 'IP Address') + ':</td><td><input id="staFixedIp" type="text" /></td></tr><tr><td>' + l(':gw', 'Gateway') + ':</td><td><input id="staFixedGateway" type="text" /></td></tr><tr><td>' + l(':nm', 'Netmask') + ':</td><td><input id="staFixedNetmask" type="text" placeholder="255.255.255.0" /></td></tr><tr><td>' + l(':dns', 'DNS Server') + ' 1:</td><td><input id="staFixedDns1" type="text" /></td></tr><tr><td>' + l(':dns', 'DNS Server') + ' 2:</td><td><input id="staFixedDns2" type="text" /></td></tr></tbody>\
+<tr><td colspan="2"><h4>' + l(':ap-settings', 'Access Point Settings') + '</h4></td></tr><tr><td>' + l(':ap-name', 'Access Point Name') + ':</td><td><input id="apSsid" type="text" /></td></tr><tr><td>' + l(':pass-prot', 'Password protection') + ':</td><td><input id="apProtected" type="checkbox" /></td></tr><tbody id="apPassword" class="hidden"><tr><td>' + l(':password', 'Password') + ':</td><td><input id="apPass" type="text" /></td></tr></tbody>\
+<tr><td colspan="2"><h4>Discovery</h4></td></tr><tr><td>' + l(':enable-disc', 'Enable device discovery') + ':</td><td><input id="discovery" type="checkbox" /></td></table></li>\
+<li><button class="saveConfig">' + l(':save', 'Save') + '</button><a class="showAdvanced" href="#">' + l(':advanced', 'Advanced Settings') + '</a> <button class="resetConfig hidden">' + l(':reset-settings', 'Reset Settings') + '</button></li></ul></div>';
     new MainMenu(this.el)
     this.el.querySelector('.showAdvanced').addEventListener('click', function(e){
       self.el.querySelector('.advanced').classList.toggle('hidden');
@@ -66,32 +68,27 @@ WiFiConfigMenu = function(el, device, options){
   this.updateMenu = function(){
     // Update the WiFi network list
     var net = this.el.querySelector('#staSsid');
-    if(typeof this.networks === 'undefined'){
-      net.innerHTML = '<option value="">' + l(':scanning') + '</option>'
+    if(Object.keys(networks).length === 0){
+      net.innerHTML = '<option value="">' + l(':scanning', "Scanning for networks...") + '</option>'
       net.disabled = true;
     }else{
-      if(this.networks.length > 0){
-        this.el.querySelector('#staSsid').innerHTML = this.networks.map(function(n){
-          var s = '<option value="' + n[0] + '"';
-          if(n[0] === self.conf.sta_ssid) s += ' selected="selected"';
-          s += '>' + n[0]
-          if(n[0] === self.conf.sta_ssid) s += ' [connected]';
-          s += '</option>';
-          return s
-        });
-        net.disabled = false;
-      }else{
-        net.innerHTML = '<option>' + l(':no-networks') + '</option>'
-        net.disabled = true;
-      }
+      var nets = Object.keys(networks).map(function(n){
+        return networks[n];
+      }).sort(function(a, b){
+        return b[2] - a[2];
+      })
+      this.el.querySelector('#staSsid').innerHTML = nets.map(function(n){
+        var s = '<option value="' + n[0] + '"';
+        if(n[0] === self.conf.sta_ssid) s += ' selected="selected"';
+        s += '>' + n[0]
+        if(n[1]) s += ' &#x1f512; ';
+        if(n[0] === self.conf.sta_ssid) s += ' [connected]';
+        s += '</option>';
+        return s
+      });
+      net.disabled = false;
     }
     if(this.conf){
-      // Update the icon
-      if(this.conf.sta_ip !== '0.0.0.0'){
-        this.el.classList.add('connected');
-      }else{
-        this.el.classList.remove('connected');
-      }
       // Update the other network settings
       // DHCP setting
       this.el.querySelector('#staDhcp').checked = this.conf.sta_dhcp;

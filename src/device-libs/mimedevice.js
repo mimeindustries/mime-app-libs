@@ -218,10 +218,23 @@ var MimeDevice = function(url){
   },
   
   this.addCmd = function(cmd){
-    this[cmd] = function(cb, arg){
+    this[cmd] = function(arg1, arg2){
       var msg = {cmd: cmd};
-      if(typeof arg !== 'undefined') msg.arg = arg;
-      this.send(msg, cb);
+      if(typeof arg1 === 'undefined'){
+        // No args or callback
+        this.send(msg);
+      }else if(typeof arg1 !== 'undefined' && typeof arg1 !== 'function'){
+        // Args but no callback
+        msg.arg = arg1;
+        this.send(msg);
+      }else if(typeof arg1 === 'function'){
+        // No args, just a callback
+        this.send(msg, arg1);
+      }else if(typeof arg1 !== 'undefined' && typeof arg2 === 'function'){
+        // Args and a callback
+        msg.arg = arg1;
+        this.send(msg, arg2);
+      }
     }
   }
   
@@ -231,4 +244,7 @@ var MimeDevice = function(url){
   this.addCmd('setConfig');
   this.addCmd('resetConfig');
   this.addCmd('startWifiScan');
+  this.addCmd('stop');
+  this.addCmd('pause');
+  this.addCmd('resume');
 }

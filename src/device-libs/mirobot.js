@@ -1,9 +1,5 @@
-var Mearm = function(url){
+var Mirobot = function(url){
   MimeDevice.call(this, url);
-
-  this.addCmd('stop');
-  this.addCmd('pause');
-  this.addCmd('resume');
 
   this.addCmd('forward');
   this.addCmd('back');

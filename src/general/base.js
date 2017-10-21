@@ -10,6 +10,15 @@ var hasLocalStorage = function(){
   }
 }
 
+// pull out any hash parameters into an easily accessible variable
+window.hashConfig = {};
+if(window.location.hash !== ''){
+  window.location.hash.replace('#', '').split('&').map(function(el){
+    var split = el.split('=');
+    hashConfig[split[0]] = split[1];
+  });
+}
+
 /*
   Update the links so that they preserve the language and mirobot config
 */

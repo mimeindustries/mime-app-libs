@@ -65,7 +65,6 @@ var MeArmControlMenu = function(el, mearm){
   }
 
   this.handleServoStateChange = function(msg){
-    console.log(msg)
     for(servo in msg){
       this.updateAngle(servo, msg[servo]);
     }

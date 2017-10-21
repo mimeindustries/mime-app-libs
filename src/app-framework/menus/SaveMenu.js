@@ -50,20 +50,20 @@ SaveMenu.prototype.init = function(){
   var menu = document.createElement('ul');
   menu.id="saveMenu";
   menu.className="subMenu";
-  menu.appendChild(this.createMenuItem(l(':save') + ' <span class="title"></span>', function(){ self.saveHandler();}));
-  menu.appendChild(this.createMenuItem(l(':save-as') + '...', function(){ self.saveAsHandler();}));
-  menu.appendChild(this.createMenuItem(l(':new-prog'), function(){ self.newHandler();}));
-  menu.appendChild(this.createMenuItem(l(':delete-prog'), function(){ self.deleteHandler();}));
-  menu.appendChild(this.createMenuItem(l(':download'), function(){ self.downloadHandler();}));
+  menu.appendChild(this.createMenuItem(l(':save', 'Save') + ' <span class="title"></span>', function(){ self.saveHandler();}));
+  menu.appendChild(this.createMenuItem(l(':save-as', 'Save as') + '...', function(){ self.saveAsHandler();}));
+  menu.appendChild(this.createMenuItem(l(':new-prog', 'New program'), function(){ self.newHandler();}));
+  menu.appendChild(this.createMenuItem(l(':delete-prog', 'Delete program'), function(){ self.deleteHandler();}));
+  menu.appendChild(this.createMenuItem(l(':download', 'Download current program'), function(){ self.downloadHandler();}));
   var uploader = document.createElement('input');
   uploader.type = 'file';
   uploader.id = "uploader";
   wrap.appendChild(uploader);
   uploader.addEventListener('change', function(e){ self.uploadFileHandler(e) }, false);
-  menu.appendChild(this.createMenuItem(l(':upload'), function(){ self.uploadHandler();}));
+  menu.appendChild(this.createMenuItem(l(':upload', 'Upload program'), function(){ self.uploadHandler();}));
   
   var progs_li = document.createElement('li');
-  progs_li.innerHTML = l(':open') + ':';
+  progs_li.innerHTML = l(':open', 'Open program') + ':';
   progs_li.className = 'inactive';
   menu.appendChild(progs_li);
   wrap.appendChild(menu);
@@ -99,7 +99,7 @@ SaveMenu.prototype.saveAsModal = function(){
   var el = document.createElement('div');
   el.id = "saveAsModal";
   var p = document.createElement('p');
-  p.innerHTML = l(':choose-name');
+  p.innerHTML = l(':choose-name', 'Choose the file name');
   el.appendChild(p);
   var input = document.createElement('input');
   input.type = "text"
@@ -126,7 +126,7 @@ SaveMenu.prototype.saveAsHandler = function(){
             self.persister.exists(filename, function(exists){
               if(exists){
                 modal.hide();
-                nanoModal(l(':exists'), {autoRemove: true}).show().onHide(modal.show);
+                nanoModal(l(':exists', 'Error, file already exists with this name'), {autoRemove: true}).show().onHide(modal.show);
               }else{
                 self.persister.saveAs(filename);
                 modal.hide();
@@ -155,7 +155,7 @@ SaveMenu.prototype.uploadFileHandler = function(e){
   }else if(typeof e.target !== 'undefined'){
     var files = e.target.files;
   }
-  if(files.length > 1) return nanoModal(l(':single-file'), {autoRemove: true}).show();
+  if(files.length > 1) return nanoModal(l(':single-file', 'Please select a single file to upload'), {autoRemove: true}).show();
   
   // Read the file
   var r = new FileReader(files[0]);
@@ -173,7 +173,7 @@ SaveMenu.prototype.loadFromFile = function(content){
 SaveMenu.prototype.checkSaved = function(cb){
   this.persister.unsaved(function(unsaved){
     if(unsaved){
-      nanoConfirm(l(':unsaved'), function(res){
+      nanoConfirm(l(':unsaved', 'You have unsaved changes which will be lost. Do you want to continue?'), function(res){
         cb(res);
       });
     }else{
@@ -197,7 +197,7 @@ SaveMenu.prototype.deleteHandler = function(){
   var self = this;
   var filename = this.persister.currentProgram;
   if(filename && filename !== ''){
-    nanoConfirm(l(':sure') + " '" + filename + "'? " + l(':permanent') + '.', function(res){
+    nanoConfirm(l(':sure', 'Are you sure you want to delete program') + " '" + filename + "'? " + l(':permanent', 'This is permanent and cannot be undone') + '.', function(res){
       if(res) self.persister.delete(filename);
     });
   }
