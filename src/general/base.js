@@ -41,4 +41,18 @@ var updateLinks = function(){
   });
 }
 
+var qs = function(e){
+  return document.querySelector(e);
+}
+
+var qsa = function(e){
+  return document.querySelectorAll(e);
+}
+
+var remove = function(e){
+  if(e.parentNode){
+    e.parentNode.removeChild(e);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', updateLinks);

@@ -21,9 +21,9 @@ FnInstance.prototype = {
   },
   updateState: function(state){
     if(state === 'started'){
-      $(this.el).addClass('active');
+      this.el.classList.add('active');
     }else if(state === 'complete'){
-      $(this.el).removeClass('active');
+      this.el.classList.remove('active');
     }
     if(this.parent && this.parent.el){
       this.parent.updateState(state);
@@ -37,11 +37,12 @@ FnInstance.prototype = {
     var self = this;
     var args ={}
     if(this.fn){
-      snack.each(this.fn.content, function(item){
+      for(var i=0; i< this.fn.content.length; i++){
+        var item = this.fn.content[i];
         if(typeof item === 'object'){
           args[item.name] = self.el.querySelector('[name='+ item.name + ']').value;
         }
-      });
+      };
     }
     return args;
   },
@@ -62,7 +63,7 @@ FnInstance.prototype = {
 var BuiltinUI = function(el, device, disableLocalstorage, functions){
   var self = this;
   this.functions = functions;
-  this.el = el;
+  this.el = qs(el);
   this.device = device;
   this.fns = {};
   this.paused = false;
@@ -71,9 +72,9 @@ var BuiltinUI = function(el, device, disableLocalstorage, functions){
   this.store = !disableLocalstorage;
   this.init();
 
-  snack.each(this.functions, function(f){
-    self.fns[f.name] = f;
-  });
+  for(var i=0; i<this.functions.length; i++){
+    self.fns[this.functions[i].name] = this.functions[i];
+  };
 }
 
 BuiltinUI.prototype = {
@@ -92,8 +93,8 @@ BuiltinUI.prototype = {
   init: function(){
     var self = this;
     var adjustment;
-    this.el.addClass('editor');
-    this.el[0].innerHTML = this.mainUI;
+    this.el.classList.add('editor');
+    this.el.innerHTML = this.mainUI;
     this.setSize();
     window.addEventListener('resize', function(){self.setSize();});
 
@@ -108,14 +109,14 @@ BuiltinUI.prototype = {
       e.preventDefault();
     }, false);
     
-    this.runner = $('.editor .run');
-    this.pause = $('.editor .pause');
-    this.stop = $('.editor .stop');
-    this.clear = $('.editor .clear');
-    this.runner.attach('click', function(e){self.runProgram()});
-    this.pause.attach('click', function(e){self.pauseProgram()});
-    this.stop.attach('click', function(e){self.stopProgram()});
-    this.clear.attach('click', function(e){self.clearProgram()});
+    this.runner = qs('.editor .run');
+    this.pause = qs('.editor .pause');
+    this.stop = qs('.editor .stop');
+    this.clear = qs('.editor .clear');
+    this.runner.addEventListener('click', function(e){self.runProgram()});
+    this.pause.addEventListener('click', function(e){self.pauseProgram()});
+    this.stop.addEventListener('click', function(e){self.stopProgram()});
+    this.clear.addEventListener('click', function(e){self.clearProgram()});
     
     this.initDevice();
 
@@ -124,11 +125,11 @@ BuiltinUI.prototype = {
   },
   updateDeviceState: function(){
     if(this.device.ready()){
-      this.el.addClass('ready');
-      this.el.removeClass('notReady');
+      this.el.classList.add('ready');
+      this.el.classList.remove('notReady');
     }else{
-      this.el.removeClass('ready');
-      this.el.addClass('notReady');
+      this.el.classList.remove('ready');
+      this.el.classList.add('notReady');
     }
   },
   supportsLocalStorage: function(){
@@ -142,7 +143,7 @@ BuiltinUI.prototype = {
   },
   saveProgram: function(){
     var prog = new FnInstance(null, null, null);
-    this.generate($('.editor ol.program')[0], prog);
+    this.generate(qs('.editor ol.program'), prog);
     return JSON.stringify(prog.toObject());
   },
   loadProgram: function(input){
@@ -177,7 +178,7 @@ BuiltinUI.prototype = {
           }
         }
         self.checkForChanges(newEl);
-        snack.wrap(newEl).draggableList({
+        new DraggableList(newEl, {
           target: 'ol.program',
           placeholder: '<li class="placeholder"/>',
           copy: false,
@@ -197,33 +198,34 @@ BuiltinUI.prototype = {
       g = d.getElementsByTagName('body')[0],
       x = w.innerWidth || e.clientWidth || g.clientWidth,
       y = w.innerHeight|| e.clientHeight|| g.clientHeight;
-    var right = this.el[0].getElementsByClassName('right')[0];
-    var prog = this.el[0].getElementsByClassName('programWrapper')[0];
-    var buttons = this.el[0].getElementsByClassName('buttons')[0];
+    var right = this.el.getElementsByClassName('right')[0];
+    var prog = this.el.getElementsByClassName('programWrapper')[0];
+    var buttons = this.el.getElementsByClassName('buttons')[0];
     right.style.height = y - right.offsetTop - 27 + 'px';
     prog.style.height = buttons.offsetTop - prog.offsetTop + 'px';
   },
   progCompleteHandler: function(e){
-    this.runner.show();
-    this.pause.hide();
+    this.runner.style.display = '';
+    this.pause.style.display = 'none';
   },
   showHints: function(){
-    $('.editor .programWrapper ol').each(function(el){
-      el.getElementsByClassName('hint')[0].style.display = (el.children.length === 1 ? 'block' : 'none')
-    });
+    var hints = qsa('.editor .programWrapper ol')
+    for(var i=0; i< hints.length; i++){
+      hints[i].querySelector('.hint').style.display = (hints[i].children.length === 1 ? 'block' : 'none')
+    };
   },
   sortLists: function(){
-    var ends = this.el[0].querySelectorAll('.programWrapper li.end')
-    snack.each(ends, function(end){
-      end.parentNode.appendChild(end);
-    });
+    var ends = this.el.querySelectorAll('.programWrapper li.end')
+    for(var i=0; i< ends.length; i++){
+      ends[i].parentNode.appendChild(ends[i]);
+    };
   },
   checkForChanges: function(elem){
     var self = this;
     var inputs = elem.querySelectorAll('input, select');
-    snack.each(inputs, function(el){
-      el.addEventListener('change', function(){ self.storeProgram();});
-    });
+    for(var i=0; i< inputs.length; i++){
+      inputs[i].addEventListener('change', function(){ self.storeProgram();});
+    };
   },
   generateInput: function(conf){
     if(conf.input === 'number'){
@@ -243,8 +245,8 @@ BuiltinUI.prototype = {
   },
   addFunctions: function(){
     var self = this;
-    snack.each(this.functions, function(i, f){
-      f = self.functions[f];
+    for(var i=0; i< this.functions.length; i++){
+      f = self.functions[i];
       var fn = '<li class="function fn-' + f.name + ' draggable" data-fntype="' + f.name + '">';
       var content = f.content.str;
       var re = /\[\[([^\ ]*)\]\]/g; 
@@ -260,9 +262,9 @@ BuiltinUI.prototype = {
         fn += '<ol><li class="end"><div class="hint">Drag functions into here!</div></li></li></ol>';
       }
       fn += '</li>';
-      $('.editor .functionList')[0].innerHTML += fn;
-    });
-    $('.functionList li.draggable').draggableList({
+      qs('.editor .functionList').innerHTML += fn;
+    };
+    new DraggableList(qsa('.functionList li.draggable'), {
       target: 'ol.program',
       placeholder: '<li class="placeholder"/>',
       copy: true,
@@ -278,11 +280,11 @@ BuiltinUI.prototype = {
       this.device.resume();
     }else{
       this.prog = new FnInstance(null, null, null);
-      this.generate($('.editor ol.program')[0], this.prog);
+      this.generate(qs('.editor ol.program'), this.prog);
       this.prog.run()
     }
-    this.pause.show();
-    this.runner.hide();
+    this.pause.style.display = '';
+    this.runner.style.display = 'none';
     this.paused = false;
   },
   pauseProgram: function(){
@@ -291,8 +293,8 @@ BuiltinUI.prototype = {
     this.paused = true;
     if(!this.device){ return; }
     this.device.pause(function(){
-      self.runner.show();
-      self.pause.hide();
+      self.runner.style.display = '';
+      self.pause.style.display = 'none';
     });
   },
   stopProgram: function(cb){
@@ -300,8 +302,8 @@ BuiltinUI.prototype = {
     var self = this;
     if(!this.device){ return; }
     this.device.stop(function(){
-      self.runner.show();
-      self.pause.hide();
+      self.runner.style.display = '';
+      self.pause.style.display = 'none';
       self.paused = false;
       self.colliding = false;
       self.following = false;
@@ -313,16 +315,20 @@ BuiltinUI.prototype = {
   },
   clearProgram: function(){
     this.stopProgram();
-    $('.editor ol.program li.function').remove();
+    var fns = qsa('.editor ol.program li.function')
+    for(var i=0; i<fns.length; i++){
+      remove(fns[i]);
+    }
     this.storeProgram();
     this.showHints();
   },
   generate: function(el, parent){
     var self = this;
-    snack.each(el.childNodes, function(el){
-      if(el.nodeName.toLowerCase() === 'li' && el.className.match(/function/) && el.dataset.fntype){
-        var fn = self.fns[el.dataset.fntype];
-        var inst = new FnInstance(fn, el, self.device);
+    for(var i=0; i<el.childNodes.length; i++){
+      var e = el.childNodes[i];
+      if(e.nodeName.toLowerCase() === 'li' && e.className.match(/function/) && e.dataset.fntype){
+        var fn = self.fns[e.dataset.fntype];
+        var inst = new FnInstance(fn, e, self.device);
         parent.addChild(inst);
         if(fn.type === 'parent'){
           var children = el.childNodes;
@@ -333,7 +339,7 @@ BuiltinUI.prototype = {
           }
         }
       }
-    });
+    };
   }
 }
 

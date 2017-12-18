@@ -1,9 +1,9 @@
-snack.wrap.define('draggableList', function(config){
+var DraggableList = function(el, config){
   var clickTimeout;
   var dragging = false;
   var dragEl;
   var movers;
-  var body = snack.wrap('body');
+  var body = qs('body');
   var offset;
   var placeholder;
   
@@ -41,7 +41,7 @@ snack.wrap.define('draggableList', function(config){
       placeholder = div.childNodes[0];
     }
     
-    var target = snack.wrap(config.target)[0];
+    var target = qs(config.target);
     // If we're over the drop area, work out where to put the placeholder
     var dragRect = dragEl.getBoundingClientRect();
     if(intersect(event.pageX, event.pageY, target)){
@@ -60,7 +60,7 @@ snack.wrap.define('draggableList', function(config){
       placeholder.style.height = dragEl.getBoundingClientRect().height - 22 + 'px';
     }else{
       if(placeholder){
-        snack.wrap(placeholder).remove();
+        remove(placeholder);
       }
     }
   }
@@ -77,9 +77,10 @@ snack.wrap.define('draggableList', function(config){
     if(event.handled){return;}
     event.handled = true;
     // Set the currently selected elements as default, otherwise when copied the settings reset
-    snack.each(element.getElementsByTagName('option'), function(el){
-      el.value === el.parentNode.value ? el.setAttribute("selected", "selected") : el.removeAttribute("selected");
-    });
+    var options = element.getElementsByTagName('option');
+    for(var i=0; i<options.length; i++){
+      options[i].value === options[i].parentNode.value ? options[i].setAttribute("selected", "selected") : options[i].removeAttribute("selected");
+    };
     // Either use or copy the node
     dragEl = (config.copy ? element.cloneNode(true) : element)
     // Store the offset of the mouse from top left
@@ -92,8 +93,8 @@ snack.wrap.define('draggableList', function(config){
     dragEl.style.height = element.offsetHeight - 22 + 'px';
     dragEl.style.display = 'block';
     dragEl.style.position = 'absolute';
-    snack.wrap(dragEl).addClass('dragged');
-    snack.wrap('body').addClass('dragging');
+    dragEl.classList.add('dragged');
+    qs('body').classList.add('dragging');
     setPos(dragEl, event.pageX - offset.x, event.pageY - offset.y);
     element.parentElement.appendChild(dragEl);
     movePlaceholder(event);
@@ -118,13 +119,13 @@ snack.wrap.define('draggableList', function(config){
       movers = undefined;
     }
     dragging = false;
-    snack.wrap('body').removeClass('dragging');
-    snack.wrap(dragEl).removeClass('dragged');
+    qs('body').classList.remove('dragging');
+    dragEl.classList.remove('dragged');
     dragEl.parentNode.removeChild( dragEl );
     if(placeholder.parentNode){
       placeholder.parentNode.insertBefore(dragEl, placeholder);
       if(!dragEl._draggable){
-        snack.wrap(dragEl).draggableList({
+        new DraggableList(dragEl, {
           target: config.target,
           placeholder: '<li class="placeholder"/>',
           copy: false
@@ -137,7 +138,7 @@ snack.wrap.define('draggableList', function(config){
     dragEl.style.display = '';
     dragEl.style.position = '';
     
-    snack.wrap(placeholder).remove();
+    remove(placeholder);
     killEvent(event);
     config.onchange && config.onchange();
     config.copy && config.onaddelem && config.onaddelem(dragEl);
@@ -178,31 +179,39 @@ snack.wrap.define('draggableList', function(config){
   }
   
   // Attach handlers
-  var addEventHandlers = function(events, element, ns){
-    var el = snack.wrap(element);
-    var res_el;
+  var addEventHandlers = function(events, el, ns){
     ns = (ns ? '.' + ns : '');
-    snack.each(events, function(ev){
-      res_el = el.attach(ev + ns, function(event){eventHandler(event, element)});
+    for(var i=0; i<events.length; i++){ 
+      var ev = events[i];
+      el.addEventListener(events[i], function(event){eventHandler(event, el)});
       if(ev === 'mousedown' || ev === 'touchstart'){
         // Stop event propagation on form elements
-        snack.each(['select', 'input'], function(tag){
-          var tags = element.getElementsByTagName(tag);
-          for(var i = 0; i< tags.length; i++){
-            tags[i].addEventListener(ev, function(e){e.stopPropagation();});
-          }
-        });
+        var tags = el.getElementsByTagName('select');
+        for(var j = 0; j< tags.length; j++){
+          tags[j].addEventListener(ev, function(e){e.stopPropagation();});
+        }
+        var tags = el.getElementsByTagName('input');
+        for(var j = 0; j< tags.length; j++){
+          tags[j].addEventListener(ev, function(e){e.stopPropagation();});
+        }
       }
-    });
-    return res_el;
+    };
   }
   
-  return this.each(function (element){
-    // Apply handlers to the elements
-    addEventHandlers(['mousedown', 'touchstart'], element);
-    // Add this so we don't make things draggable twice
-    element._draggable = true;
-  })
-})
+  var initElement = function(el){
+    console.log(el);
+    addEventHandlers(['mousedown', 'touchstart'], el);
+    el._draggable = true;
+  }
+  
+  if(typeof el.length !== 'undefined'){
+    for(var i=0; i< el.length; i++){
+      initElement(el[i]);
+    }
+  }else{
+    initElement(el);
+  }
+  
+}
   
 
