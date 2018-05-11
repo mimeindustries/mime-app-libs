@@ -132,7 +132,7 @@ var MimeDevice = function(url){
     if(cb){
       this.cbs[msg.id] = cb;
     }
-    if(msg.arg){ msg.arg = msg.arg.toString(); }
+    //if(msg.arg){ msg.arg = msg.arg.toString(); }
     if(this.immediateCmds.indexOf(msg.cmd) >= 0){
       this.send_msg(msg);
     }else{
@@ -147,7 +147,7 @@ var MimeDevice = function(url){
   this.send_msg = function(msg){
     var self = this;
     console.log(msg);
-    if(this.simulating && this.sim){
+    if(this.simulating && this.sim && this.sim.supports(msg)){
       this.sim.send(msg, function(msg){ self.handle_msg(msg) });
     }else if(this.connected){
       this.ws.send(JSON.stringify(msg));
@@ -223,17 +223,19 @@ var MimeDevice = function(url){
       if(typeof arg1 === 'undefined'){
         // No args or callback
         this.send(msg);
-      }else if(typeof arg1 !== 'undefined' && typeof arg1 !== 'function'){
-        // Args but no callback
-        msg.arg = arg1;
-        this.send(msg);
-      }else if(typeof arg1 === 'function'){
-        // No args, just a callback
-        this.send(msg, arg1);
-      }else if(typeof arg1 !== 'undefined' && typeof arg2 === 'function'){
-        // Args and a callback
-        msg.arg = arg1;
-        this.send(msg, arg2);
+      }else if(typeof arg1 !== 'undefined'){
+        if(typeof arg1 === 'function'){
+          // No args, just a callback
+          this.send(msg, arg1);
+        }else if(typeof arg2 === 'undefined'){
+          // Args but no callback
+          msg.arg = arg1;
+          this.send(msg);
+        }else if(typeof arg2 === 'function'){
+          // Args and a callback
+          msg.arg = arg1;
+          this.send(msg, arg2);
+        }
       }
     }
   }
@@ -247,6 +249,8 @@ var MimeDevice = function(url){
   this.addCmd('stop');
   this.addCmd('pause');
   this.addCmd('resume');
+  this.addCmd('updateFirmware');
+  this.addCmd('updateUI');
 }
 
 var MeArm = function(url){

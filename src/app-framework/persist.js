@@ -59,7 +59,7 @@ var ChromeSandboxStorageInterface = function(){
 
 var Persister = function(conf){
   var self = this;
-  this.namespace = window.location.pathname.replace(/\//g, '').replace('index.html', '');
+  this.namespace = conf.namespace || window.location.pathname.replace(/\//g, '').replace('index.html', '');
   window.addEventListener('pagehide', function(){return self.handleUnload();});
   window.addEventListener('beforeunload', function(){return self.handleUnload();});
   if(conf.saveHandler && typeof conf.saveHandler === 'function' && conf.loadHandler && typeof conf.loadHandler === 'function'){
@@ -202,7 +202,6 @@ Persister.prototype = {
           out.push(keys[i].replace(prefix, ''));
         }
       }
-      console.log(out);
       cb(out);
     });
   }

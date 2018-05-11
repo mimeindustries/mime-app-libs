@@ -55,4 +55,31 @@ var remove = function(e){
   }
 }
 
-document.addEventListener('DOMContentLoaded', updateLinks);
+var loadFile = function( src, type, cb ){
+  var loaded = false, errored = false, timeout, el;
+  if(type === 'js'){
+    el = document.createElement('script');
+    el.setAttribute("type","text/javascript");
+    el.setAttribute("src", src);
+  }else if(type === 'css'){
+    el = document.createElement("link");
+    el.setAttribute("rel", "stylesheet");
+    el.setAttribute("type", "text/css");
+    el.setAttribute("href", src);
+  }
+  var noload = function(err) {
+    // handling error when loading script
+    if(!loaded && !errored && cb){
+      cb(false);
+    }
+    errored = true;
+  }
+  el.onerror = noload
+  el.onload = function(){
+    loaded = true;
+    delete timeout;
+    cb(true);
+  }
+  document.getElementsByTagName('head')[0].appendChild(el);
+  window.setTimeout(noload, 10000);
+}

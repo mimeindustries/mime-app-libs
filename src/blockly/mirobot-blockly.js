@@ -1,66 +1,107 @@
-function Editor(editorId, controlsId, lang){
+function MirobotRunner(mirobot){
+  var self = this;
+  this.mirobot = mirobot;
+  this.stack = [];
+  
+  this.run = function(prog){
+    var self = this;
+    console.log(prog);
+    try {
+      eval(prog);
+    } catch (e) {
+      // Null is thrown for infinite loop.
+      // Otherwise, abnormal termination is a user error.
+      if (e !== Infinity) {
+        alert(e);
+      }
+    }
+    this.runNext();
+  }
+  
+  var done = function(){
+    return function(msg){
+      if(msg === 'complete') self.runNext();
+    }
+  }
+  
+  var runCmd = function(fn, el){
+    return function(){
+      Blockly.mainWorkspace.traceOn(true)
+      self.highlight(el);
+      fn();
+    }
+  }
+  
+  this.highlight = function(id){
+    Blockly.mainWorkspace.highlightBlock(id);
+  }
+  
+  this.runNext = function(){
+    if(this.stack.length > 0){
+      var next = this.stack.shift();
+      next();
+    }else{
+      Blockly.mainWorkspace.highlightBlock();
+    }
+  }
+  
+  this.forward = function(distance, el){
+    this.stack.push(runCmd(function(){ self.mirobot.forward(distance, done()) }, el));
+  }
+  this.back = function(distance, el){
+    this.stack.push(runCmd(function(){ self.mirobot.back(distance, done()) }, el));
+  }
+  this.left = function(angle, el){
+    this.stack.push(runCmd(function(){ self.mirobot.left(angle, done()) }, el));
+  }
+  this.right = function(angle, el){
+    this.stack.push(runCmd(function(){ self.mirobot.right(angle, done()) }, el));
+  }
+  this.penup = function(el){
+    this.stack.push(runCmd(function(){ self.mirobot.penup(done()) }, el));
+  }
+  this.pendown = function(el){
+    this.stack.push(runCmd(function(){ self.mirobot.pendown(done()) }, el));
+  }
+  this.beep = function(duration, el){
+    this.stack.push(runCmd(function(){ self.mirobot.beep(duration, done()) }, el));
+  }
+}
+
+
+function MirobotBlockly(editorId, controlsId, lang){
   this.editorId = editorId;
   this.el = document.getElementById(editorId);
   this.lang = lang;
   this.initControls(controlsId);
   this.init(editorId);
+  this.el.classList.remove('hidden');
   this.resize();
 }
 
-Editor.prototype = {
+MirobotBlockly.prototype = {
   init: function(id){
     var self = this;
-    ace.config.set("workerPath", '/assets/apps/javascript/')
-    this.editor = ace.edit(id);
-    this.editor.setTheme("ace/theme/xcode");
-    this.editor.getSession().setMode("ace/mode/" + this.lang);
-    this.editor.$blockScrolling = Infinity;
-    this.editor.setShowPrintMargin(false);
+
+  	this.workspace = Blockly.inject(this.editorId,
+      {toolbox: document.getElementById('toolbox'),
+      media: '/a/bm/'});
+
     window.addEventListener('resize', function(){ self.resize(); });
-    this.help = document.querySelector('#help');
-    document.querySelector('#helpButton').addEventListener('click', function(){ self.helpHandler(); });
-    this.initConsole();
   },
-  initControls: function(id){
+  initControls: function(id){ 
     var self = this;
     this.controls = document.getElementById(id);
     this.controls.querySelector('.run').addEventListener('click', function(){ self.clickRun(); })
     this.controls.querySelector('.pause').addEventListener('click', function(){ self.clickPause(); })
     this.controls.querySelector('.stop').addEventListener('click', function(){ self.clickStop(); })
     this.controls.querySelector('.clear').addEventListener('click', function(){ self.clickClear(); })
-  },
-  printToConsole: function(text){
-    this.showConsole();
-    var pre = this.console.querySelector('pre');
-    pre.innerHTML += text + "\n";
-    // Scroll to bottom
-    pre.scrollTop = pre.scrollHeight;
-  },
-  showConsole: function(state){
-    if(state || typeof state === 'undefined'){
-      this.console.classList.remove('hide-console');
-      this.console.classList.add('show-console');
-    }else{
-      this.console.classList.add('hide-console');
-      this.console.classList.remove('show-console');
-    }
-  },
-  initConsole: function(){
-    var self = this;
-    this.console = document.createElement('div');
-    this.console.id = 'console';
-    this.console.className = 'hide-console';
-    this.console.innerHTML = '<button class="showButton">Show Console</button><button class="hideButton">Hide Console</button><pre></pre>';
-    this.console.querySelector('.showButton').addEventListener('click', function(){ self.showConsole(); });
-    this.console.querySelector('.hideButton').addEventListener('click', function(){ self.showConsole(false); });
-    document.body.appendChild(this.console)
+    this.controls.classList.remove('hidden');
   },
   resize: function(){
     // Find the top of the buttons
     var height = window.innerHeight - document.getElementById(this.editorId).offsetTop - this.controls.getBoundingClientRect().height - 10;
     document.getElementById(this.editorId).style.height = height + "px";
-    this.editor.resize();
-    this.help.style.height = (height - 70) + 'px'
   },
   helpHandler: function(){
     if(this.help.style.display !== 'block'){
@@ -75,16 +116,12 @@ Editor.prototype = {
     this.controls.querySelector('.run').style.display = (state==='run' ? '' : 'none');
     this.controls.querySelector('.pause').style.display = (state==='pause' ? '' : 'none');
   },
-  onRun: function(cb){
-    this._onRun = cb;
-  },
-  onStop: function(cb){
-    this._onStop = cb;
-  },
   clickRun: function(){
     if(!this.mirobot.ready()) return;
     this.setRunButtonState('pause');
-    if(this._onRun)this._onRun(this.editor.getValue());
+    
+    var code = Blockly.Mirobot.workspaceToCode();
+    this.runner.run(code);
   },
   clickPause: function(){
     if(!this.mirobot.ready()) return;
@@ -93,8 +130,8 @@ Editor.prototype = {
   clickStop: function(){
     if(!this.mirobot.ready()) return;
     this.mirobot.stop();
+    if(this.runner) this.runner.stack = [];
     this.setRunButtonState('run');
-    if(this._onStop)this._onStop();
   },
   clickClear: function(){
     this.clearProgram();
@@ -105,6 +142,7 @@ Editor.prototype = {
   setMirobot: function(mirobot){
     var self = this;
     this.mirobot = mirobot;
+    this.runner = new MirobotRunner(mirobot)
     this.mirobot.addEventListener('programComplete', function(msg){ self.completeHandler(msg); });
     this.mirobot.addEventListener('readyStateChange', function(){ self.updateMirobotState() });
     this.updateMirobotState();
@@ -118,13 +156,13 @@ Editor.prototype = {
       this.controls.classList.add('notReady');
     }
   },
-  saveProgram: function(name){
-    return this.editor.getValue();
+  saveProgram: function(){
+    return Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(Blockly.getMainWorkspace()));
   },
   loadProgram: function(prog){
-    return this.editor.setValue(prog, -1);
+    return Blockly.Xml.domToWorkspace(Blockly.getMainWorkspace(), Blockly.Xml.textToDom(prog))
   },
   clearProgram: function(){
-    return this.editor.setValue('');
+    return Blockly.getMainWorkspace().clear()
   }
 }

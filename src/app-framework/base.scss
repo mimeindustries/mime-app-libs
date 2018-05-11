@@ -23,7 +23,7 @@ html, body{
   max-width:80%;
 }
 
-#header img, #header svg{
+#header h1 img, #header h1 svg{
   margin:7px 0 0 10px;
   max-width:80%;
 }
@@ -220,4 +220,24 @@ ul.subMenu li.inactive{
   left:9px;
   bottom:0;
   cursor:sw-resize;
+}
+#config td{
+  font-size:85%;
+  padding:3px;
+}
+#config h4{
+  font-size:100%;
+  font-weight:bold;
+  padding:6px 3px 6px 0;
+}
+#config td.label{
+  width:130px;
+  text-align:right;
+}
+#config ul.subMenu li{
+  width:320px;
+}
+#config .showAdvanced{
+  font-size:90%;
+  margin-left:5px;
 }

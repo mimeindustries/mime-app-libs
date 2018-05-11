@@ -199,7 +199,6 @@ var DraggableList = function(el, config){
   }
   
   var initElement = function(el){
-    console.log(el);
     addEventHandlers(['mousedown', 'touchstart'], el);
     el._draggable = true;
   }

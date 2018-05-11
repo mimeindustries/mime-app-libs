@@ -229,6 +229,11 @@ MirobotSimMenu = function(el, mirobot){
 
   this.resizer.addEventListener('mousedown', startDrag, false);
   this.resizer.addEventListener('touchstart', startDrag, false);
+  
+  this.supports = function(msg){
+    var supported = ['stop', 'pause', 'resume', 'left', 'right', 'forward', 'back', 'penup', 'pendown', 'beep'];
+    return supported.indexOf(msg.cmd) >= 0;
+  }
 
   this.send = function(msg, cb){
     this.process(msg, cb)
@@ -253,12 +258,6 @@ MirobotSimMenu = function(el, mirobot){
       }else if(msg.cmd === 'resume'){
         //stop the turtle moving
         this.turtle.resume(completeCb(cb, msg.id));
-      }else if(msg.cmd === 'ping'){
-        //stop the turtle moving
-        completeCb(cb, msg.id)();
-      }else if(msg.cmd === 'version'){
-        //stop the turtle moving
-        completeCb(cb, msg.id, 'sim')();
       }
     }else{
       if(self.turtle.moving){
@@ -304,6 +303,7 @@ var Turtle = function(el){
   this.initted = false;
   this.speed = 1;
   this.stopped = false;
+  this.currentCB;
 
   function rotatePoint(point, angle){
     var xr = point[0] * Math.cos(angle) - point[1] * Math.sin(angle);
@@ -360,6 +360,7 @@ var Turtle = function(el){
   }
 
   this.move = function(distance, cb){
+    this.currentCB = cb;
     if(this.moving) return;
     this.moving = true;
     this.stopped = false;
@@ -385,6 +386,7 @@ var Turtle = function(el){
         window.requestAnimationFrame(animate);
       }else{
         self.moving = false;
+        self.currentCB = null;
         cb();
       }
     }
@@ -392,6 +394,7 @@ var Turtle = function(el){
   }
 
   this.rotate = function(angle, cb){
+    this.currentCB = cb;
     if(this.moving) return;
     this.moving = true;
     this.stopped = false;
@@ -410,6 +413,7 @@ var Turtle = function(el){
       self.draw();
       if(step === steps){
         self.moving = false;
+        self.currentCB = null;
         cb();
       }else{
         window.requestAnimationFrame(animate);
@@ -438,6 +442,7 @@ var Turtle = function(el){
   this.stop = function(cb){
     this.stopped = true;
     this.moving = false;
+    if(this.currentCB) this.currentCB();
     if(cb) cb();
   }
 

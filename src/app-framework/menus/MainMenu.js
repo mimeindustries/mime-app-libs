@@ -43,4 +43,12 @@ var MainMenu = function(el, options){
     });
   }
   window.addEventListener("keydown", function(e){ handleKeyboard(e);}, false);
+  
+  this.addItem = function(text, click){
+    var sub = el.querySelector('ul.subMenu')
+    var li = document.createElement('li');
+    li.innerHTML = text;
+    li.addEventListener('click', click);
+    sub.appendChild(li);
+  }
 }

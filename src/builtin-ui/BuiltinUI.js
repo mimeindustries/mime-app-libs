@@ -37,8 +37,8 @@ FnInstance.prototype = {
     var self = this;
     var args ={}
     if(this.fn){
-      for(var i=0; i< this.fn.content.length; i++){
-        var item = this.fn.content[i];
+      for(var key in this.fn.content){
+        var item = this.fn.content[key];
         if(typeof item === 'object'){
           args[item.name] = self.el.querySelector('[name='+ item.name + ']').value;
         }
@@ -331,10 +331,10 @@ BuiltinUI.prototype = {
         var inst = new FnInstance(fn, e, self.device);
         parent.addChild(inst);
         if(fn.type === 'parent'){
-          var children = el.childNodes;
-          for(var i = 0; i< children.length; i++){
-            if(children[i].nodeName.toLowerCase() === 'ol'){
-              self.generate(children[i], inst);
+          var children = e.childNodes;
+          for(var j = 0; j< children.length; j++){
+            if(children[j].nodeName.toLowerCase() === 'ol'){
+              self.generate(children[j], inst);
             }
           }
         }
