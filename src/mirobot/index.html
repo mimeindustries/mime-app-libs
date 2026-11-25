@@ -60,7 +60,7 @@ window.addEventListener('load', function(){
     connecting: "Connecting to Mirobot"
   });
 
-  // Initialise the WiFi config menu. The firmware downloads updates from downloads.mime.co.uk itself.
+  // Initialise the WiFi config menu. The firmware chooses where to download updates from itself.
   var wifiSettings = new ConfigMenu('#menu', mirobot, {deviceChoosesUpdate: true});
 
   // Initialise the apps menu
