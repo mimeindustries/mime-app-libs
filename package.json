@@ -5,7 +5,8 @@
   "main": "mimedevice.js",
   "scripts": {
     "test": "test.js",
-    "build:mearm-wifi": "node tools/build-mearm-wifi.js"
+    "build:mearm-wifi": "node tools/build-ui.js mearm-wifi",
+    "build:mirobot": "node tools/build-ui.js mirobot"
   },
   "repository": {
     "type": "git",
