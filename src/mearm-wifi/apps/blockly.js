@@ -65,7 +65,8 @@ var init = function(){
       '  <category name="Variables" colour="330" custom="VARIABLE" data-l10n=":variables"></category>' +
       '  <category name="Functions" colour="290" custom="PROCEDURE" data-l10n=":functions"></category></xml>';
 
-    var editor = new MearmBlockly('editor', 'controlBar');
+    // Blockly's images and sounds are in data/bm/ on the board, as the arm's own network has no internet
+    var editor = new MearmBlockly('editor', 'controlBar', undefined, {media: '/a/bm/'});
     editor.setMearm(mearm);
 
     if(hasLocalStorage()){

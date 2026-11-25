@@ -64,8 +64,11 @@ function MearmRunner(mearm){
 }
 
 
-function MearmBlockly(editorId, controlsId, lang){
+// options (optional): extra Blockly.inject options, e.g. {media: '/a/bm/'} to load Blockly's images and sounds
+// from that path instead of blockly-demo.appspot.com
+function MearmBlockly(editorId, controlsId, lang, options){
   this.editorId = editorId;
+  this.options = options || {};
   this.el = document.getElementById(editorId);
   this.lang = lang;
   this.initControls(controlsId);
@@ -78,8 +81,11 @@ MearmBlockly.prototype = {
   init: function(id){
     var self = this;
 
-  	this.workspace = Blockly.inject(this.editorId,
-      {toolbox: document.getElementById('toolbox')});
+    var injectOptions = {toolbox: document.getElementById('toolbox')};
+    for(var key in this.options){
+      if(this.options.hasOwnProperty(key)) injectOptions[key] = this.options[key];
+    }
+  	this.workspace = Blockly.inject(this.editorId, injectOptions);
 
     window.addEventListener('resize', function(){ self.resize(); });
   },
