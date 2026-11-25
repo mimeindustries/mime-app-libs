@@ -173,22 +173,34 @@ ConfigMenu = function(el, device, options){
     xhr.send(null); 
   }
   
+  // options.deviceChoosesUpdate: the device downloads its updates from its own fixed address, so send the
+  // update commands straight away instead of looking up file names in Mirobot's versions.json first
+  var deviceChoosesUpdate = !!(options && options.deviceChoosesUpdate);
+
   this.updateFW = function(e){
     if(confirm("Are you sure you want to update the firmware? This may take several minutes. Please do not power off the device during this time.")){
-      getVersions(function(res){
-        console.log(res);
-        self.device.updateFirmware("http://downloads.mime.co.uk/Mirobot/v3/" + res.firmware);
-      });
+      if(deviceChoosesUpdate){
+        self.device.updateFirmware();
+      }else{
+        getVersions(function(res){
+          console.log(res);
+          self.device.updateFirmware("http://downloads.mime.co.uk/Mirobot/v3/" + res.firmware);
+        });
+      }
     }
     e.preventDefault();
     return false;
   }
-  
+
   this.updateUI = function(e){
     if(confirm("Are you sure you want to update the user interface? This may take several minutes. Please do not power off the device during this time.")){
-      getVersions(function(res){
-        self.device.updateUI("http://downloads.mime.co.uk/Mirobot/v3/" + res.ui);
-      });
+      if(deviceChoosesUpdate){
+        self.device.updateUI();
+      }else{
+        getVersions(function(res){
+          self.device.updateUI("http://downloads.mime.co.uk/Mirobot/v3/" + res.ui);
+        });
+      }
     }
     e.preventDefault();
     return false;

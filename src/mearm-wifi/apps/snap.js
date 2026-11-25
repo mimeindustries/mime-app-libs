@@ -6,6 +6,9 @@ var init = function(){
 
     var world;
 
+    // Snap!'s logo and block click sound are in data/snap/ on the board
+    IDE_Morph.prototype.assetPath = '/a/snap/';
+
     // Keep the Snap! IDE below the page header
     IDE_Morph.prototype.reactToWorldResize = function(rect){
       if(this.isAutoFill){

@@ -45,6 +45,9 @@ var init = function(){
           '</div>';
         qs('#app').innerHTML = setup;
 
+        // Ace runs JavaScript syntax checking in a worker loaded from here (data/worker-javascript.js)
+        ace.config.set('workerPath', '/a/');
+
         var editor = new Editor('editor', 'controlBar', 'javascript');
         editor.setDevice(window.mearm);
 

@@ -51,8 +51,8 @@ window.addEventListener('load', function(){
     connecting: "Connecting to MeArm"
   });
 
-  // Initialise the WiFi config menu
-  var wifiSettings = new ConfigMenu('#menu', mearm);
+  // Initialise the WiFi config menu. The firmware downloads updates from downloads.mearm.com itself.
+  var wifiSettings = new ConfigMenu('#menu', mearm, {deviceChoosesUpdate: true});
 
   // Initialise the apps menu
   var xobj = new XMLHttpRequest();

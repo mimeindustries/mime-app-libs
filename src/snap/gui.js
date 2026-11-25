@@ -92,6 +92,10 @@ IDE_Morph.prototype = new Morph();
 IDE_Morph.prototype.constructor = IDE_Morph;
 IDE_Morph.uber = Morph.prototype;
 
+// Where Snap!'s images, sounds, help pictures and translations are served from. Ends in '/'.
+// Set it before opening the IDE to serve them from somewhere else.
+IDE_Morph.prototype.assetPath = '/assets/apps/snap/';
+
 // IDE_Morph preferences settings and skins
 
 IDE_Morph.prototype.setDefaultDesign = function () {
@@ -428,7 +432,7 @@ IDE_Morph.prototype.createLogo = function () {
     }
 
     this.logo = new Morph();
-    this.logo.texture = '/assets/apps/snap/snap_logo_sm.png';
+    this.logo.texture = IDE_Morph.prototype.assetPath + 'snap_logo_sm.png';
     this.logo.drawNew = function () {
         this.image = newCanvas(this.extent());
         var context = this.image.getContext('2d'),
@@ -2448,7 +2452,7 @@ IDE_Morph.prototype.projectMenu = function () {
     menu.addItem(
         localize(graphicsName) + '...',
         function () {
-            var dir = '/assets/apps/snap/' + graphicsName,
+            var dir = IDE_Morph.prototype.assetPath + graphicsName,
                 names = myself.getCostumesList(dir),
                 libMenu = new MenuMorph(
                     myself,
@@ -2481,11 +2485,11 @@ IDE_Morph.prototype.projectMenu = function () {
     menu.addItem(
         localize('Sounds') + '...',
         function () {
-            var names = this.getCostumesList('/assets/apps/snap/Sounds/'),
+            var names = this.getCostumesList(IDE_Morph.prototype.assetPath + 'Sounds/'),
                 libMenu = new MenuMorph(this, 'Import sound');
 
             function loadSound(name) {
-                var url = '/assets/apps/snap/Sounds/' + name,
+                var url = IDE_Morph.prototype.assetPath + 'Sounds/' + name,
                     audio = new Audio();
                 audio.src = url;
                 audio.load();
@@ -3484,7 +3488,7 @@ IDE_Morph.prototype.languageMenu = function () {
 
 IDE_Morph.prototype.setLanguage = function (lang, callback) {
     var translation = document.getElementById('language'),
-        src = '/assets/apps/snap/lang-' + lang + '.js',
+        src = IDE_Morph.prototype.assetPath + 'lang-' + lang + '.js',
         myself = this;
     SnapTranslator.unload();
     if (translation) {

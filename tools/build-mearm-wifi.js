@@ -108,10 +108,13 @@ const DATA_FILES = [
   ]},
   { name: 'editor.css.gz', scss: ['editor/editor.scss'] },
   { name: 'js-mode.js.gz', js: ['editor/ace-src-min-noconflict/mode-javascript.js'] },
+  { name: 'worker-javascript.js.gz', js: ['editor/ace-src-min-noconflict/worker-javascript.js'] },
   { name: 'py-mode.js.gz', js: ['editor/ace-src-min-noconflict/mode-python.js'] },
 
   // Loaded by the Snap! app
   { name: 'remote.css.gz', scss: ['remote/main.scss'] },
+  { name: 'snap/snap_logo_sm.png', copy: 'snap/assets/snap_logo_sm.png' },
+  { name: 'snap/click.wav', copy: 'snap/assets/click.wav' },
 
   // Blockly media
   ...['sprites.png', 'click.mp3', 'delete.mp3', 'disconnect.wav', 'handopen.cur', 'handclosed.cur', 'handdelete.cur']
