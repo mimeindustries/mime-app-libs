@@ -1906,7 +1906,7 @@ BlockMorph.prototype.toggleSnapSound = function () {
         this.snapSound = null;
     } else {
         BlockMorph.prototype.snapSound = document.createElement('audio');
-        BlockMorph.prototype.snapSound.src = '/assets/apps/snap/click.wav';
+        BlockMorph.prototype.snapSound.src = IDE_Morph.prototype.assetPath + 'click.wav';
     }
     CommentMorph.prototype.snapSound = BlockMorph.prototype.snapSound;
 };
@@ -2466,7 +2466,7 @@ BlockMorph.prototype.showHelp = function () {
             block.fullImage()
         );
     } else {
-        pic.src = '/assets/apps/snap/help/' + spec + '.png';
+        pic.src = IDE_Morph.prototype.assetPath + 'help/' + spec + '.png';
     }
 };
 
