@@ -1,61 +1,108 @@
+// Built-in drag and drop UI.
+//
+// Sizes are relative (rem, em, %, viewport units) so the editor scales with the screen and the
+// browser's text size. The only fixed sizes are 1px hairline borders, which would otherwise round
+// away or blur on some screens.
+//
+// Wide screens: toolbox on the left, program on the right. Narrow screens (under 40em): toolbox on
+// top with its blocks wrapping, program below; the page itself doesn't scroll, only the two panes.
+
+// The page header's height, measured by BuiltinUI.js (it varies: on a phone the menu wraps onto its
+// own row). The fallback matches the header's usual height.
+$header: var(--header-height, 3.75rem);
+
+// .editor is the page's #app element
 .editor{
-  display:block;
-  min-width:600px;
-  
+  display:flex;
+  gap:1rem;
+  box-sizing:border-box;
+  // Sit just below the fixed header and fill the rest of the screen. dvh follows the visible area as
+  // mobile browser toolbars show and hide.
+  height:calc(100vh - #{$header});
+  height:calc(100dvh - #{$header});
+  min-height:20rem;
+  font-size:1rem;
+  line-height:1.3;
+
+  *, *::before, *::after{
+    box-sizing:border-box;
+  }
+
   ol{
     list-style-type:none;
     padding:0;
     margin:0;
   }
-  .left{
-    width:300px;
-    float: left;
-  }
-  .functionList{
-    vertical-align:top;
-    background:#EEE;
+
+  .container{
+    display:flex;
+    flex-direction:column;
+    min-height:0;
     border:1px solid #888;
-    padding:10px;
-  }
-  input[type='number']{
-    width:50px;
   }
   .container h2{
+    flex:none;
     background:#888;
-    padding:5px;
+    padding:0.35em 0.5em;
     margin:0;
     color:#FFF;
+    font-weight:bold;
+  }
+
+  .left{
+    flex:0 0 min(21rem, 42%);
   }
   .right{
-    border:1px solid #888;
-    margin-left:310px;
-    max-width:600px;
-    position:relative;
+    flex:1 1 auto;
+    min-width:0;
+    max-width:40rem;
   }
+
+  // The two panes scroll on their own; overscroll-behavior stops a scroll at the end of a pane
+  // from scrolling or bouncing the page behind it
+  .functionList,
   .programWrapper{
-    overflow:auto;
+    flex:1 1 auto;
+    min-height:0;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
   }
+  .functionList{
+    background:#EEE;
+    padding:0.6rem;
+  }
+
+  input[type='number']{
+    width:4.5em;
+  }
+  // 1rem text stops iOS zooming the page when a field is tapped; the height makes them easy to hit
+  input, select{
+    font-size:1rem;
+    min-height:2.2em;
+    padding:0.1em 0.3em;
+    margin:0 0.2em;
+    vertical-align:middle;
+  }
+
   .buttons{
-    position:absolute;
-    padding:0;
-    bottom:0;
-    width:100%;
+    flex:none;
+    display:flex;
 
     button{
+      flex:1 1 0;
       color:#FFF;
-      font-size:1.5em;
-      padding:5px;
-      height:40px;
-      vertical-align:top;
+      font-size:1.4em;
+      padding:0.3em;
+      min-height:2.6rem;
       border:none;
-      width:33.33%;
-      display:inline-block;
       font-weight:bold;
       margin:0;
       background:#BBB;
+      touch-action:manipulation;
     }
     button:focus{
-      outline-width: 0;
+      outline-width:0;
     }
 
     .run{ background-color:#33D121 }
@@ -74,90 +121,133 @@
     .disabled:hover{ background-color:#BBB }
   }
 
-  .editor.notReady .buttons .run{ background-color:#BBB }
-  .editor.notReady .buttons .stop{ background-color:#AAA }
+  &.notReady .buttons .run{ background-color:#BBB }
+  &.notReady .buttons .stop{ background-color:#AAA }
 
   .program{
-    overflow:hidden;
-    min-width:300px;
     min-height:100%;
-    vertical-align:top;
-    padding:10px;
+    padding:0.6rem;
 
     .hint{
       text-align:center;
       border:1px dashed #888;
       display:block;
-      padding:10px;
+      padding:0.6em;
       min-height:1.5em;
-      color:#CCC;
+      color:#AAA;
     }
   }
-  
+
   .functionList .hint{
     display:none;
   }
-  
+
   .function{
     background:#FFF;
     border:1px solid #888;
-    padding:10px;
+    padding:0.6em;
     min-height:1.5em;
+    // Blocks are dragged, not selected or long-pressed
+    user-select:none;
+    -webkit-user-select:none;
+    -webkit-touch-callout:none;
+    cursor:grab;
   }
   .program .function.running{
     background:#F00;
   }
   .functionList .function{
-    -webkit-box-shadow: 12px 12px 12px -5px rgba(0,0,0,0.5);
-    -moz-box-shadow: 12px 12px 12px -5px rgba(0,0,0,0.5);
-    box-shadow: 12px 12px 12px -5px rgba(0,0,0,0.5);
-    margin:0 0 10px;
+    box-shadow:0.3rem 0.3rem 0.6rem -0.15rem rgba(0,0,0,0.4);
+    margin:0 0 0.6rem;
   }
   .fn-repeat ol{
     min-height:1.5em;
+    margin-top:0.4em;
     border:1px solid #888;
   }
-  .dragged {
-    position: absolute;
-    opacity: 0.5;
-    z-index: 2000;
+
+  // The block being dragged floats above the page and follows the pointer with a transform
+  // (set by DraggableList), which the browser can move without laying out the page again
+  .dragged{
+    position:fixed;
+    margin:0;
+    opacity:0.7;
+    z-index:7000;
+    pointer-events:none;
+    will-change:transform;
+    box-shadow:0.4rem 0.4rem 1rem rgba(0,0,0,0.35);
   }
-  .placeholder {
-    position: relative;
+  .placeholder{
     border:1px dashed #888;
     display:block;
-    padding:10px;
-    min-height:1.5em;
+    background:rgba(0,0,0,0.04);
   }
   ol.program li.function.active{
     background-color:#0F0;
   }
 
   .extra{
-    padding:10px;
+    padding:0.6rem;
 
     button{
       display:block;
-      margin:0 0 10px 0;
-      background: #FFF;
-      border: 1px #888 solid;
-      padding:5px;
-      min-width:160px;
+      margin:0 0 0.6rem 0;
+      background:#FFF;
+      border:1px #888 solid;
+      padding:0.3em;
+      min-width:10rem;
       text-align:center;
       min-height:3em;
     }
     button:active{
-      background: #DDD;
+      background:#DDD;
     }
     button:hover{
-      background: #EEE;
+      background:#EEE;
     }
     button:focus{
-      outline: 0;
+      outline:0;
     }
   }
 }
 
-body.dragging, body.dragging * {
-  cursor: move !important;
+// The page sets #app's top margin by id, so this needs the id too to win
+#app.editor{
+  margin-top:$header;
+}
+
+// Phones and narrow windows: stack the panes and let the toolbox blocks sit side by side
+@media (max-width: 40em){
+  .editor{
+    flex-direction:column;
+    gap:0.6rem;
+
+    .left{
+      flex:0 1 auto;
+      max-height:38%;
+    }
+    .right{
+      flex:1 1 auto;
+      max-width:none;
+    }
+    .functionList{
+      display:flex;
+      flex-wrap:wrap;
+      align-content:flex-start;
+      gap:0.5rem;
+      padding:0.5rem;
+    }
+    .functionList .function{
+      flex:1 1 auto;
+      margin:0;
+      padding:0.5em;
+    }
+    .container h2{
+      font-size:0.9rem;
+    }
+  }
+}
+
+body.dragging, body.dragging *{
+  cursor:grabbing !important;
 }

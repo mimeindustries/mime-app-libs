@@ -94,21 +94,10 @@ BuiltinUI.prototype = {
     var self = this;
     var adjustment;
     this.el.classList.add('editor');
+    // Sizing and scrolling are handled by BuiltinUI.scss
     this.el.innerHTML = this.mainUI;
-    this.setSize();
-    window.addEventListener('resize', function(){self.setSize();});
+    this.trackHeaderHeight();
 
-    // Stop the whole page scrolling in touch browsers except in the program
-    document.addEventListener('touchmove', function(e) {
-      var el = e.target;
-      while(el = el.parentElement){
-        if(el.id === 'program'){
-          return;
-        }
-      }
-      e.preventDefault();
-    }, false);
-    
     this.runner = qs('.editor .run');
     this.pause = qs('.editor .pause');
     this.stop = qs('.editor .stop');
@@ -191,27 +180,42 @@ BuiltinUI.prototype = {
       }
     }
   },
-  setSize: function(){
-    var w = window,
-      d = document,
-      e = d.documentElement,
-      g = d.getElementsByTagName('body')[0],
-      x = w.innerWidth || e.clientWidth || g.clientWidth,
-      y = w.innerHeight|| e.clientHeight|| g.clientHeight;
-    var right = this.el.getElementsByClassName('right')[0];
-    var prog = this.el.getElementsByClassName('programWrapper')[0];
-    var buttons = this.el.getElementsByClassName('buttons')[0];
-    right.style.height = y - right.offsetTop - 27 + 'px';
-    prog.style.height = buttons.offsetTop - prog.offsetTop + 'px';
+  // The page header is fixed and its height varies: on a phone the menu wraps onto its own row.
+  // Publish its height as --header-height so the editor can sit just below it and fill the rest.
+  trackHeaderHeight: function(){
+    var header = document.getElementById('header');
+    if(!header) return;
+    var update = function(){
+      document.documentElement.style.setProperty('--header-height', header.getBoundingClientRect().height + 'px');
+    };
+    update();
+    if(window.ResizeObserver){
+      new ResizeObserver(update).observe(header);
+    }else{
+      window.addEventListener('resize', update);
+    }
   },
   progCompleteHandler: function(e){
     this.runner.style.display = '';
     this.pause.style.display = 'none';
   },
+  // Show each list's "drag here" hint only while the list is empty. Each list's hint is in its own
+  // last item, li.end; nested lists (inside Repeat) have their own.
   showHints: function(){
-    var hints = qsa('.editor .programWrapper ol')
-    for(var i=0; i< hints.length; i++){
-      hints[i].querySelector('.hint').style.display = (hints[i].children.length === 1 ? 'block' : 'none')
+    var lists = this.el.querySelectorAll('.programWrapper ol');
+    for(var i=0; i< lists.length; i++){
+      var end = null, blocks = 0;
+      for(var j=0; j< lists[i].children.length; j++){
+        var child = lists[i].children[j];
+        if(child.classList.contains('end')){
+          end = child;
+        }else if(!child.classList.contains('dragged')){
+          blocks++;
+        }
+      }
+      if(end){
+        end.querySelector('.hint').style.display = (blocks === 0 ? 'block' : 'none');
+      }
     };
   },
   sortLists: function(){
@@ -352,7 +356,7 @@ BuiltinUI.prototype.mainUI = '\
   <h2>Program</h2>\
   <div class="programWrapper">\
     <ol class="program" id="program">\
-      <li class="end"><div class="hint">Drag functions from the left over here!</div></li>\
+      <li class="end"><div class="hint">Drag functions here!</div></li>\
     </ol>\
   </div>\
   <div class="buttons">\
