@@ -1,216 +1,310 @@
+// Drag and drop for the built-in UI's function blocks.
+//
+// new DraggableList(elOrElements, config)
+//   config.target       selector of the list blocks can be dropped into
+//   config.placeholder  HTML of the placeholder shown where the block will land
+//   config.copy         true to drag a copy (the toolbox), false to move the block itself (the program)
+//   config.ondrag       called when the placeholder moves to a different list (e.g. to update hints)
+//   config.onchange     called after a drop
+//   config.onaddelem    called with the new element after a copy is dropped
+//
+// Mouse drags start straight away. Touch drags start after a short press-and-hold, so a quick swipe
+// still scrolls the page. While dragging, the block follows the pointer with a CSS transform and the
+// placeholder is updated at most once per animation frame.
 var DraggableList = function(el, config){
-  var clickTimeout;
-  var dragging = false;
-  var dragEl;
-  var movers;
-  var body = qs('body');
-  var offset;
-  var placeholder;
-  
-  var setPos = function(el, x, y){
-    el.style.left = x + 'px';
-    el.style.top = y + 'px';
-  }
-  
-  // Works out if a point is within an element
-  var intersect = function(x, y, el){
-    var rect = el.getBoundingClientRect();
-    return x >= rect.left &&
-           x <= rect.right &&
-           y >= rect.top &&
-           y <= rect.bottom;
-  }
-  
-  var ancestor = function(el1, el2){
-    if(el1 === el2){
-      return true;
-    }
-    while(el1 = el1.parentElement){
-      if(el1 === el2){
-        return true;
-      }
-    }
-    return false;
-  }
+  var HOLD_MS = 150;        // touch: how long to hold before the block picks up
+  var MOVE_SLOP = 10;       // touch: how far (px) the finger may wander during the hold
+  var EDGE = 0.12;          // auto-scroll when within this fraction of the viewport's top/bottom
+  var MAX_SCROLL = 18;      // auto-scroll speed at the very edge, px per frame
 
-  var movePlaceholder = function(event){
-    // Create the placeholder if it doesn't exist already
-    if(!placeholder){ 
-      var div = document.createElement('div');
-      div.innerHTML = config.placeholder;
-      placeholder = div.childNodes[0];
-    }
-    
-    var target = qs(config.target);
-    // If we're over the drop area, work out where to put the placeholder
-    var dragRect = dragEl.getBoundingClientRect();
-    if(intersect(event.pageX, event.pageY, target)){
-      // find the li that's nearest to the cursor and insert placeholder bofore it
-      var targets = Array.prototype.slice.call( target.getElementsByTagName('li'), 0 ).filter(function(el){ return !ancestor(el, dragEl) });
-      // calculate vertical distances
-      var dists = targets.map(function(t){
-        return [t, Math.abs(event.pageY - t.getBoundingClientRect().top)];
-      });
-      // find the nearest
-      var nearest = dists.reduce(function(prev, curr){
-        return (prev[1] < curr[1] ? prev : curr);
-      });
-      // insert placeholder before
-      nearest[0].parentNode.insertBefore(placeholder, nearest[0]);
-      placeholder.style.height = dragEl.getBoundingClientRect().height - 22 + 'px';
-    }else{
-      if(placeholder){
-        remove(placeholder);
-      }
-    }
-  }
-  
+  var state = null;         // the drag in progress, if any
+
   var killEvent = function(e){
-    e.cancelBubble = true;
     e.stopPropagation();
-    e.preventDefault();
-    e.returnValue = false;
-  }
+    if(e.cancelable) e.preventDefault();
+  };
 
-  var startDrag = function(element, event){
-    // Can't stop events bubbling on iOS so resorting to this more manual hack
-    if(event.handled){return;}
-    event.handled = true;
-    // Set the currently selected elements as default, otherwise when copied the settings reset
+  var isFormElement = function(t){
+    var name = t && t.nodeName ? t.nodeName.toLowerCase() : '';
+    return name === 'select' || name === 'input' || name === 'option' || name === 'button';
+  };
+
+  var point = function(e){
+    var t = e.touches && e.touches.length ? e.touches[0] : (e.changedTouches && e.changedTouches.length ? e.changedTouches[0] : e);
+    return { x: t.clientX, y: t.clientY };
+  };
+
+  var makePlaceholder = function(){
+    var div = document.createElement('div');
+    div.innerHTML = config.placeholder;
+    return div.firstChild;
+  };
+
+  var startDrag = function(element, p){
+    // Keep the current choice in each <select> when the block is copied
     var options = element.getElementsByTagName('option');
-    for(var i=0; i<options.length; i++){
-      options[i].value === options[i].parentNode.value ? options[i].setAttribute("selected", "selected") : options[i].removeAttribute("selected");
+    for(var i = 0; i < options.length; i++){
+      if(options[i].value === options[i].parentNode.value){
+        options[i].setAttribute('selected', 'selected');
+      }else{
+        options[i].removeAttribute('selected');
+      }
+    }
+
+    var rect = element.getBoundingClientRect();
+    var dragEl = config.copy ? element.cloneNode(true) : element;
+    var target = document.querySelector(config.target);
+
+    state = {
+      element: element,
+      dragEl: dragEl,
+      target: target,
+      placeholder: makePlaceholder(),
+      // Where in the block it was grabbed, so it doesn't jump to the pointer
+      grab: { x: p.x - rect.left, y: p.y - rect.top },
+      origin: { x: rect.left, y: rect.top },
+      pointer: p,
+      frame: null,
+      lastList: null
     };
-    // Either use or copy the node
-    dragEl = (config.copy ? element.cloneNode(true) : element)
-    // Store the offset of the mouse from top left
-    offset = {
-      x: event.pageX - element.offsetLeft,
-      y: event.pageY - element.offsetTop
-    }
-    // Style it so it looks the same (padding and border currently hardcoded)
-    dragEl.style.width = element.offsetWidth - 22 + 'px';
-    dragEl.style.height = element.offsetHeight - 22 + 'px';
-    dragEl.style.display = 'block';
-    dragEl.style.position = 'absolute';
+
+    // The dragged block floats above the page at its current size. Its size is fixed here because
+    // position:fixed takes it out of the list's layout.
+    dragEl.style.width = rect.width + 'px';
+    dragEl.style.height = rect.height + 'px';
+    dragEl.style.left = rect.left + 'px';
+    dragEl.style.top = rect.top + 'px';
     dragEl.classList.add('dragged');
-    qs('body').classList.add('dragging');
-    setPos(dragEl, event.pageX - offset.x, event.pageY - offset.y);
-    element.parentElement.appendChild(dragEl);
-    movePlaceholder(event);
-    dragging = true;
-    killEvent(event);
-  }
-  
-  // Called on move to update the position and the placeholder
-  var drag = function(event){
-    if(!dragging){ return; }
-    setPos(dragEl, event.pageX - offset.x, event.pageY - offset.y);
-    movePlaceholder(event);
-    config.ondrag && config.ondrag();
-    killEvent(event);
-  }
-  
-  // Drop it in place
-  var stopDrag = function(event){
-    if(!dragging){return;}
-    if(movers){
-      movers.detach('movers');
-      movers = undefined;
+    if(config.copy){
+      element.parentNode.appendChild(dragEl);
     }
-    dragging = false;
-    qs('body').classList.remove('dragging');
+    state.placeholder.style.height = rect.height + 'px';
+    document.body.classList.add('dragging');
+    scheduleFrame();
+  };
+
+  var scheduleFrame = function(){
+    if(state && !state.frame){
+      state.frame = window.requestAnimationFrame(frame);
+    }
+  };
+
+  // All reading and writing of layout during a drag happens here, once per frame
+  var frame = function(){
+    if(!state) return;
+    state.frame = null;
+    var p = state.pointer;
+
+    // Measure first (placeholder, auto-scroll), then move the floating block. Writing the transform
+    // before measuring would make the browser lay out the page again just to answer the measurement.
+    updatePlaceholder(p);
+    autoScroll(p);
+    // A transform needs no layout, just compositing
+    state.dragEl.style.transform = 'translate3d(' + (p.x - state.grab.x - state.origin.x) + 'px,' +
+                                                    (p.y - state.grab.y - state.origin.y) + 'px,0)';
+  };
+
+  var updatePlaceholder = function(p){
+    var s = state;
+    var targetRect = s.target.getBoundingClientRect();
+    var over = p.x >= targetRect.left && p.x <= targetRect.right && p.y >= targetRect.top && p.y <= targetRect.bottom;
+    if(!over){
+      if(s.placeholder.parentNode){
+        s.placeholder.parentNode.removeChild(s.placeholder);
+        changedList(null);
+      }
+      return;
+    }
+
+    // While the pointer is over the placeholder, leave it where it is. Otherwise inserting it would push
+    // the item under the pointer down, a different item would become nearest, and it would flicker.
+    if(s.placeholder.parentNode){
+      var pr = s.placeholder.getBoundingClientRect();
+      if(p.y >= pr.top && p.y <= pr.bottom) return;
+    }
+
+    // Read: the list items the block could go before, nearest to the pointer first
+    var items = s.target.getElementsByTagName('li');
+    var nearest = null, best = Infinity;
+    for(var i = 0; i < items.length; i++){
+      var li = items[i];
+      if(li === s.placeholder || li === s.dragEl || s.dragEl.contains(li)) continue;
+      var d = Math.abs(p.y - li.getBoundingClientRect().top);
+      if(d < best){ best = d; nearest = li; }
+    }
+    if(!nearest) return;
+
+    // Write: only when the placeholder actually needs to move
+    if(s.placeholder.nextSibling !== nearest || s.placeholder.parentNode !== nearest.parentNode){
+      nearest.parentNode.insertBefore(s.placeholder, nearest);
+      changedList(nearest.parentNode);
+    }
+  };
+
+  var changedList = function(list){
+    if(state.lastList !== list){
+      state.lastList = list;
+      config.ondrag && config.ondrag();
+    }
+  };
+
+  // Scroll the program when the block is held near its top or bottom edge, so blocks can be dragged
+  // to parts of the program that are out of view
+  var autoScroll = function(p){
+    var scroller = scrollParent(state.target);
+    var isPage = scroller === (document.scrollingElement || document.documentElement);
+    var top = 0, bottom = window.innerHeight;
+    if(!isPage){
+      var r = scroller.getBoundingClientRect();
+      top = Math.max(r.top, 0);
+      bottom = Math.min(r.bottom, window.innerHeight);
+    }
+    if(p.y < top || p.y > bottom) return;
+    var edge = (bottom - top) * EDGE, dy = 0;
+    if(p.y < top + edge) dy = -MAX_SCROLL * (1 - (p.y - top) / edge);
+    else if(p.y > bottom - edge) dy = MAX_SCROLL * (1 - (bottom - p.y) / edge);
+    if(dy){
+      var before = scroller.scrollTop;
+      scroller.scrollTop += dy;
+      if(scroller.scrollTop !== before) scheduleFrame();
+    }
+  };
+
+  var scrollParent = function(node){
+    while(node && node !== document.body){
+      var oy = window.getComputedStyle(node).overflowY;
+      if((oy === 'auto' || oy === 'scroll') && node.scrollHeight > node.clientHeight) return node;
+      node = node.parentElement;
+    }
+    return document.scrollingElement || document.documentElement;
+  };
+
+  var move = function(p){
+    if(!state) return;
+    state.pointer = p;
+    scheduleFrame();
+  };
+
+  var endDrag = function(cancelled){
+    if(!state) return;
+    var s = state;
+    state = null;
+    if(s.frame) window.cancelAnimationFrame(s.frame);
+    document.body.classList.remove('dragging');
+
+    var dragEl = s.dragEl;
     dragEl.classList.remove('dragged');
-    dragEl.parentNode.removeChild( dragEl );
-    if(placeholder.parentNode){
-      placeholder.parentNode.insertBefore(dragEl, placeholder);
+    dragEl.style.width = dragEl.style.height = dragEl.style.left = dragEl.style.top = dragEl.style.transform = '';
+
+    var dropped = !cancelled && s.placeholder.parentNode;
+    if(dropped){
+      s.placeholder.parentNode.insertBefore(dragEl, s.placeholder);
       if(!dragEl._draggable){
         new DraggableList(dragEl, {
           target: config.target,
-          placeholder: '<li class="placeholder"/>',
-          copy: false
+          placeholder: config.placeholder,
+          copy: false,
+          ondrag: config.ondrag,
+          onchange: config.onchange
         });
       }
+    }else if(config.copy || !cancelled){
+      // A copy dropped outside the program is discarded; a program block dragged out is deleted
+      if(dragEl.parentNode) dragEl.parentNode.removeChild(dragEl);
     }
-    
-    dragEl.style.width = ''
-    dragEl.style.height = '';
-    dragEl.style.display = '';
-    dragEl.style.position = '';
-    
-    remove(placeholder);
-    killEvent(event);
-    config.onchange && config.onchange();
-    config.copy && config.onaddelem && config.onaddelem(dragEl);
-  }
-  
-  // Monolithic event handler for all of the events
-  var eventHandler = function(event, element){
-    var elType = (event.target || event.srcElement).nodeName.toLowerCase();
-    if(elType !== 'select' && elType !== 'input'){
-      if(event.type === 'mousedown'){
-        // start listening to move and up
-        movers = addEventHandlers(['mouseup', 'mousemove'], body, 'movers');
-        // start dragging
-        startDrag(element, event);
-      }else if(event.type === 'touchstart'){
-        // Add a small delay to differentiate from page scroll
-        clickTimeout = window.setTimeout(function(){
-          startDrag(element, event);
-        }, 100);
-        // start listening to move and end
-        movers = addEventHandlers(['touchend', 'touchmove'], body, 'movers');
-      }else if(event.type === 'touchend' || event.type === 'mouseup'){
-        // Clear the timeout if we've released before it triggered
-        if(clickTimeout){
-          clearTimeout(clickTimeout);
-        }
-        // Stop dragging
-        stopDrag(event);
-      }else if(event.type === 'touchmove' || event.type === 'mousemove'){
-        // Clear the timeout if we've moved before it triggered
-        if(clickTimeout){
-          clearTimeout(clickTimeout);
-        }
-        // Stop dragging
-        drag(event);
-      }
+    if(s.placeholder.parentNode) s.placeholder.parentNode.removeChild(s.placeholder);
+
+    // The list the block came from may now be empty
+    config.ondrag && config.ondrag();
+    if(!cancelled){
+      config.onchange && config.onchange();
+      if(dropped && config.copy && config.onaddelem) config.onaddelem(dragEl);
     }
-  }
-  
-  // Attach handlers
-  var addEventHandlers = function(events, el, ns){
-    ns = (ns ? '.' + ns : '');
-    for(var i=0; i<events.length; i++){ 
-      var ev = events[i];
-      el.addEventListener(events[i], function(event){eventHandler(event, el)});
-      if(ev === 'mousedown' || ev === 'touchstart'){
-        // Stop event propagation on form elements
-        var tags = el.getElementsByTagName('select');
-        for(var j = 0; j< tags.length; j++){
-          tags[j].addEventListener(ev, function(e){e.stopPropagation();});
-        }
-        var tags = el.getElementsByTagName('input');
-        for(var j = 0; j< tags.length; j++){
-          tags[j].addEventListener(ev, function(e){e.stopPropagation();});
-        }
-      }
+  };
+
+  // --- Mouse ---------------------------------------------------------------------------------------
+  // Listeners for the rest of the drag are added on mousedown and removed again when it ends.
+  var mouseDown = function(e){
+    if(e.button !== 0 || e._dragHandled || isFormElement(e.target)) return;
+    e._dragHandled = true;  // nested blocks: only the innermost one picks up
+    var element = this;
+    var onMove = function(ev){ move(point(ev)); ev.preventDefault(); };
+    var onUp = function(ev){
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      endDrag(false);
     };
-  }
-  
-  var initElement = function(el){
-    addEventHandlers(['mousedown', 'touchstart'], el);
-    el._draggable = true;
-  }
-  
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    startDrag(element, point(e));
+    killEvent(e);
+  };
+
+  // --- Touch ---------------------------------------------------------------------------------------
+  // Touch events keep going to the element the finger started on, so these listeners live on each
+  // block and are added once. touchmove is non-passive so the page doesn't scroll during a drag.
+  var hold = null;
+
+  var touchStart = function(e){
+    if(e._dragHandled || e.touches.length > 1 || isFormElement(e.target)) return;
+    e._dragHandled = true;
+    var element = this;
+    var p = point(e);
+    hold = {
+      start: p,
+      timer: window.setTimeout(function(){
+        hold = null;
+        startDrag(element, p);
+        if(navigator.vibrate) navigator.vibrate(10);
+      }, HOLD_MS)
+    };
+  };
+
+  var touchMove = function(e){
+    if(state){
+      move(point(e));
+      killEvent(e);
+    }else if(hold && !e._dragHandled){
+      // Moved before the hold finished: it's a scroll, not a drag
+      var p = point(e);
+      if(Math.abs(p.x - hold.start.x) > MOVE_SLOP || Math.abs(p.y - hold.start.y) > MOVE_SLOP){
+        window.clearTimeout(hold.timer);
+        hold = null;
+      }
+    }
+    e._dragHandled = true;
+  };
+
+  var touchEnd = function(e){
+    if(hold){
+      window.clearTimeout(hold.timer);
+      hold = null;
+    }
+    if(state && !e._dragHandled){
+      e._dragHandled = true;
+      endDrag(e.type === 'touchcancel');
+      killEvent(e);
+    }
+  };
+
+  var initElement = function(element){
+    if(element._draggable) return;
+    element._draggable = true;
+    element.addEventListener('mousedown', mouseDown);
+    element.addEventListener('touchstart', touchStart, { passive: true });
+    element.addEventListener('touchmove', touchMove, { passive: false });
+    element.addEventListener('touchend', touchEnd);
+    element.addEventListener('touchcancel', touchEnd);
+    // Stop the browser's own drag, text selection and long-press menu getting in the way
+    element.addEventListener('dragstart', function(e){ e.preventDefault(); });
+    element.addEventListener('contextmenu', function(e){ if(state) e.preventDefault(); });
+  };
+
   if(typeof el.length !== 'undefined'){
-    for(var i=0; i< el.length; i++){
+    for(var i = 0; i < el.length; i++){
       initElement(el[i]);
     }
   }else{
     initElement(el);
   }
-  
-}
-  
-
+};
