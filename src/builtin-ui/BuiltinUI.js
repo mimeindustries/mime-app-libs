@@ -356,7 +356,7 @@ BuiltinUI.prototype.mainUI = '\
   <h2>Program</h2>\
   <div class="programWrapper">\
     <ol class="program" id="program">\
-      <li class="end"><div class="hint">Drag functions here!</div></li>\
+      <li class="end"><div class="hint">Drag functions here, or double-tap one to add it</div></li>\
     </ol>\
   </div>\
   <div class="buttons">\

@@ -8,14 +8,20 @@
 //   config.onchange     called after a drop
 //   config.onaddelem    called with the new element after a copy is dropped
 //
-// Mouse drags start straight away. Touch drags start after a short press-and-hold, so a quick swipe
-// still scrolls the page. While dragging, the block follows the pointer with a CSS transform and the
+// Mouse drags start once the pointer has moved a few pixels with the button down. Touch drags start
+// after a short press-and-hold, so a quick swipe still scrolls the page. Releasing a picked-up block
+// without moving it puts it back.
+//
+// A press that doesn't become a drag is a tap. Double-tapping a block in the program deletes it;
+// double-tapping one in the toolbox adds a copy to the end of the program. While dragging, the block follows the pointer with a CSS transform and the
 // placeholder is updated at most once per animation frame.
 var DraggableList = function(el, config){
   var HOLD_MS = 150;        // touch: how long to hold before the block picks up
   var MOVE_SLOP = 10;       // touch: how far (px) the finger may wander during the hold
   var EDGE = 0.12;          // auto-scroll when within this fraction of the viewport's top/bottom
   var MAX_SCROLL = 18;      // auto-scroll speed at the very edge, px per frame
+  var DRAG_SLOP = 5;        // mouse: how far (px) to move with the button down before a drag starts
+  var DOUBLE_TAP_MS = 400;  // two taps on the same block within this are a double tap
 
   var state = null;         // the drag in progress, if any
 
@@ -40,8 +46,8 @@ var DraggableList = function(el, config){
     return div.firstChild;
   };
 
-  var startDrag = function(element, p){
-    // Keep the current choice in each <select> when the block is copied
+  // Keep the current choice in each <select> when the block is copied
+  var keepSelections = function(element){
     var options = element.getElementsByTagName('option');
     for(var i = 0; i < options.length; i++){
       if(options[i].value === options[i].parentNode.value){
@@ -50,6 +56,10 @@ var DraggableList = function(el, config){
         options[i].removeAttribute('selected');
       }
     }
+  };
+
+  var startDrag = function(element, p){
+    keepSelections(element);
 
     var rect = element.getBoundingClientRect();
     var dragEl = config.copy ? element.cloneNode(true) : element;
@@ -64,6 +74,8 @@ var DraggableList = function(el, config){
       grab: { x: p.x - rect.left, y: p.y - rect.top },
       origin: { x: rect.left, y: rect.top },
       pointer: p,
+      start: p,
+      moved: false,
       frame: null,
       lastList: null
     };
@@ -182,11 +194,14 @@ var DraggableList = function(el, config){
   var move = function(p){
     if(!state) return;
     state.pointer = p;
+    if(Math.abs(p.x - state.start.x) > DRAG_SLOP || Math.abs(p.y - state.start.y) > DRAG_SLOP) state.moved = true;
     scheduleFrame();
   };
 
   var endDrag = function(cancelled){
     if(!state) return;
+    // Picked up and put down without moving: put it back, don't delete or add it
+    if(!state.moved) cancelled = true;
     var s = state;
     state = null;
     if(s.frame) window.cancelAnimationFrame(s.frame);
@@ -222,21 +237,76 @@ var DraggableList = function(el, config){
     }
   };
 
+  // --- Taps --------------------------------------------------------------------------------------
+  var lastTap = null;
+
+  var tap = function(element){
+    var now = Date.now();
+    if(lastTap && lastTap.element === element && now - lastTap.time < DOUBLE_TAP_MS){
+      lastTap = null;
+      doubleTap(element);
+    }else{
+      lastTap = { element: element, time: now };
+    }
+  };
+
+  var doubleTap = function(element){
+    var target = document.querySelector(config.target);
+    if(!target) return;
+    if(config.copy){
+      // Toolbox: add a copy to the end of the program (before its hint)
+      keepSelections(element);
+      var copy = element.cloneNode(true);
+      var end = null;
+      for(var i = 0; i < target.children.length; i++){
+        if(target.children[i].classList.contains('end')) end = target.children[i];
+      }
+      target.insertBefore(copy, end);
+      new DraggableList(copy, {
+        target: config.target,
+        placeholder: config.placeholder,
+        copy: false,
+        ondrag: config.ondrag,
+        onchange: config.onchange
+      });
+      copy.classList.add('justAdded');
+      window.setTimeout(function(){ copy.classList.remove('justAdded'); }, 600);
+      if(copy.scrollIntoView) copy.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      config.ondrag && config.ondrag();
+      config.onchange && config.onchange();
+      config.onaddelem && config.onaddelem(copy);
+    }else{
+      // Program: delete the block
+      if(element.parentNode) element.parentNode.removeChild(element);
+      config.ondrag && config.ondrag();
+      config.onchange && config.onchange();
+    }
+  };
+
   // --- Mouse ---------------------------------------------------------------------------------------
-  // Listeners for the rest of the drag are added on mousedown and removed again when it ends.
+  // Listeners for the rest of the press are added on mousedown and removed again when it ends. The
+  // block is only picked up once the pointer has moved, so a click is a tap, not a drag.
   var mouseDown = function(e){
     if(e.button !== 0 || e._dragHandled || isFormElement(e.target)) return;
     e._dragHandled = true;  // nested blocks: only the innermost one picks up
     var element = this;
-    var onMove = function(ev){ move(point(ev)); ev.preventDefault(); };
+    var start = point(e);
+    var onMove = function(ev){
+      var p = point(ev);
+      if(!state && (Math.abs(p.x - start.x) > DRAG_SLOP || Math.abs(p.y - start.y) > DRAG_SLOP)){
+        startDrag(element, start);
+      }
+      move(p);
+      ev.preventDefault();
+    };
     var onUp = function(ev){
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
-      endDrag(false);
+      if(state) endDrag(false);
+      else tap(element);
     };
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
-    startDrag(element, point(e));
     killEvent(e);
   };
 
@@ -251,6 +321,7 @@ var DraggableList = function(el, config){
     var element = this;
     var p = point(e);
     hold = {
+      element: element,
       start: p,
       timer: window.setTimeout(function(){
         hold = null;
@@ -277,13 +348,24 @@ var DraggableList = function(el, config){
 
   var touchEnd = function(e){
     if(hold){
+      // Lifted before the hold picked the block up: a tap
       window.clearTimeout(hold.timer);
+      var tapped = hold.element;
       hold = null;
+      if(e.type === 'touchend' && !e._dragHandled){
+        e._dragHandled = true;
+        tap(tapped);
+        // Stop the browser turning the double tap into a zoom or a click
+        if(e.cancelable) e.preventDefault();
+      }
     }
     if(state && !e._dragHandled){
       e._dragHandled = true;
+      // Picked up by the hold but never moved: a slower tap
+      var tapped = !state.moved && e.type === 'touchend' ? state.element : null;
       endDrag(e.type === 'touchcancel');
       killEvent(e);
+      if(tapped) tap(tapped);
     }
   };
 

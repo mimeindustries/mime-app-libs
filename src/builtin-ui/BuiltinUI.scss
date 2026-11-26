@@ -199,6 +199,15 @@ $header: var(--header-height, 3.75rem);
     display:block;
     background:rgba(0,0,0,0.04);
   }
+  // A block just added by double-tapping it in the toolbox
+  .function.justAdded{
+    animation:justAdded 0.6s ease-out;
+  }
+  @keyframes justAdded{
+    from{ background-color:#FFF4C2; }
+    to{ background-color:#FFF; }
+  }
+
   ol.program li.function.active{
     background-color:#0F0;
   }
