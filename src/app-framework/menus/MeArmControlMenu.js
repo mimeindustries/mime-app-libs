@@ -231,24 +231,16 @@ var MeArmControlMenu = function(el, mearm){
     on('.cancelLimits', cancelEdits);
     on('.defaultLimits', resetToDefaults);
 
-    // Keep the sliders in step when an app or the console changes the limits
-    ['setLimits', 'resetLimits'].forEach(function(cmd){
-      var orig = self.mearm[cmd];
-      if(!orig) return;
-      self.mearm[cmd] = function(arg1, arg2){
-        var userCb = typeof arg1 === 'function' ? arg1 : arg2;
-        var wrapped = function(status, msg){
-          if(msg && msg.msg && !editing) self.applyLimits(msg.msg);
-          if(userCb) userCb(status, msg);
-        };
-        if(typeof arg1 === 'function' || typeof arg1 === 'undefined') return orig.call(self.mearm, wrapped);
-        return orig.call(self.mearm, arg1, wrapped);
-      };
+    // The device library fetches the limits on connect and reports every
+    // change (from this panel, an app or the console). While the end points
+    // are being adjusted the sliders are the source of truth, so ignore it.
+    this.mearm.addEventListener('limitsChange', function(limits){
+      if(!editing) self.applyLimits(limits);
     });
+    if(this.mearm.limits) this.applyLimits(this.mearm.limits);
 
     this.mearm.addEventListener('connectedStateChange', function(msg){
       if(msg.state === 'connected'){
-        self.refreshLimits();
         self.mearm.getServoState(function(status, msg){ self.handleServoStateChange(msg.msg); });
       }
     });

@@ -76,6 +76,23 @@ $header: var(--header-height, 3.75rem);
   input[type='number']{
     width:4.5em;
   }
+
+  // Allowed range shown after a number, and feedback when a value is outside
+  // it (used by the MeArm move block)
+  .rangeHint{
+    font-size:0.8em;
+    color:#777;
+    white-space:nowrap;
+  }
+  input.outOfRange{
+    border-color:#C62828;
+    outline:2px solid #C62828;
+    background:#FDECEC;
+  }
+  input.clamped{
+    background:#FFF4C2;
+    transition:background 0.3s;
+  }
   // 1rem text stops iOS zooming the page when a field is tapped; the height makes them easy to hit
   input, select{
     font-size:1rem;
