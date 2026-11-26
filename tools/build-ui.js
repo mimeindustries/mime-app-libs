@@ -38,7 +38,8 @@ const TARGETS = {
   'mearm-wifi': {
     dir: 'mearm-wifi',
     device: 'device-libs/mearm.js',
-    baseJs: [],
+    // The joint sliders in the header (ranges come from the firmware's getLimits)
+    baseJs: ['app-framework/menus/nouislider.js', 'app-framework/menus/MeArmControlMenu.js'],
     baseScss: [],
     blockly: ['blockly/mearm-blockly.js', 'blockly/mearm-blocks.js'],
     snap: { objects: 'snap/objects-mearm.js', extra: 'snap/mearm-snap.js' },

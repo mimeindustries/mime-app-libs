@@ -34,6 +34,28 @@ var MeArmControlMenu = function(el, mearm){
     return slider;
   }
 
+  // Set each slider's range from the joint limits the firmware reports
+  // ({"base":{"min":-90,"max":90}, ...}). Joints missing from the reply keep
+  // their current range.
+  this.applyLimits = function(limits){
+    if(!limits || typeof limits !== 'object') return;
+    for(var name in sliders){
+      var lim = limits[name];
+      if(!lim || typeof lim.min !== 'number' || typeof lim.max !== 'number') continue;
+      var min = Math.min(lim.min, lim.max), max = Math.max(lim.min, lim.max);
+      if(max === min) max = min + 1; // noUiSlider needs a non-empty range
+      sliders[name].updateOptions({range: {min: min, max: max}}, false);
+      var el = self.el.querySelector('.' + name + 'Range');
+      if(el) el.innerHTML = Math.round(min) + '&deg; to ' + Math.round(max) + '&deg;';
+    }
+  }
+
+  this.refreshLimits = function(){
+    self.mearm.getLimits(function(status, msg){
+      if(msg && msg.msg) self.applyLimits(msg.msg);
+    });
+  }
+
   this.init = function(){
     var container = document.querySelector(el);
     container.insertAdjacentHTML('beforeend', this.menuHTML);
@@ -46,11 +68,27 @@ var MeArmControlMenu = function(el, mearm){
 
     this.mearm.addEventListener('connectedStateChange', function(msg){
       if(msg.state === 'connected'){
+        self.refreshLimits();
         self.mearm.getServoState(function(status, msg){ self.handleServoStateChange(msg.msg); })
       }
     });
     this.mearm.addEventListener('servoChange', function(msg){
       self.handleServoStateChange(msg);
+    });
+    // setLimits and resetLimits reply with the limits now in force, so keep
+    // the sliders in step when an app or the console changes them
+    ['setLimits', 'resetLimits'].forEach(function(cmd){
+      var orig = self.mearm[cmd];
+      if(!orig) return;
+      self.mearm[cmd] = function(arg1, arg2){
+        var userCb = typeof arg1 === 'function' ? arg1 : arg2;
+        var wrapped = function(status, msg){
+          if(msg && msg.msg) self.applyLimits(msg.msg);
+          if(userCb) userCb(status, msg);
+        };
+        if(typeof arg1 === 'function' || typeof arg1 === 'undefined') return orig.call(self.mearm, wrapped);
+        return orig.call(self.mearm, arg1, wrapped);
+      };
     });
     this.devices = {};
     this.el.classList.remove('hidden');
@@ -65,8 +103,8 @@ var MeArmControlMenu = function(el, mearm){
   }
 
   this.handleServoStateChange = function(msg){
-    for(servo in msg){
-      this.updateAngle(servo, msg[servo]);
+    for(var servo in msg){
+      if(sliders[servo]) this.updateAngle(servo, msg[servo]);
     }
   }
 
@@ -85,10 +123,10 @@ MeArmControlMenu.prototype.menuHTML = '<div id="control" class="menuItem hidden"
   <div class="value"><p class="label">Grip</p><p class="grip"></p></div>\
   <div class="wrapper">\
     <div class="subMenu">\
-      <div class="control"><label>Base:</label><div id="baseSlider" class="slider"></div></div>\
-      <div class="control"><label>Right:</label><div id="rightSlider" class="slider"></div></div>\
-      <div class="control"><label>Left:</label><div id="leftSlider" class="slider"></div></div>\
-      <div class="control"><label>Grip:</label><div id="gripSlider" class="slider"></div></div>\
+      <div class="control"><label>Base: <span class="range baseRange"></span></label><div id="baseSlider" class="slider"></div></div>\
+      <div class="control"><label>Right: <span class="range rightRange"></span></label><div id="rightSlider" class="slider"></div></div>\
+      <div class="control"><label>Left: <span class="range leftRange"></span></label><div id="leftSlider" class="slider"></div></div>\
+      <div class="control"><label>Grip: <span class="range gripRange"></span></label><div id="gripSlider" class="slider"></div></div>\
     </div>\
   </div>\
 </div>'

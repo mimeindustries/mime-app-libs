@@ -6,6 +6,11 @@
       display:block;
       padding-bottom:5px;
     }
+
+    .range{
+      color:#666;
+      font-size:80%;
+    }
   }
   
   .slider{
@@ -22,5 +27,32 @@
       padding-bottom:2px;
       color:#666;
     }
+  }
+
+  // Keep the panel above the other header buttons if the header wraps
+  .wrapper{
+    z-index:10;
+  }
+}
+
+// On narrow screens show just the icon, and the angle readouts would make the
+// header wrap. The sliders still show each joint's position.
+@media (max-width: 600px){
+  #control .value{
+    display:none;
+  }
+
+  // The panel opens from the right edge of its button, which would push it
+  // off the left of the screen: pin it across the width instead
+  #menu #control .wrapper{
+    position:fixed;
+    left:8px;
+    right:8px;
+    top:60px;
+    margin-top:0;
+  }
+
+  #control .slider{
+    width:auto;
   }
 }

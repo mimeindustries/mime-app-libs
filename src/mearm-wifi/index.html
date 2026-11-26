@@ -51,6 +51,10 @@ window.addEventListener('load', function(){
     connecting: "Connecting to MeArm"
   });
 
+  // Initialise the joint control sliders. Their ranges come from the arm's
+  // joint limits (getLimits) once it connects.
+  var controlMenu = new MeArmControlMenu('#menu', mearm);
+
   // Initialise the WiFi config menu. The firmware downloads updates from downloads.mearm.com itself.
   var wifiSettings = new ConfigMenu('#menu', mearm, {deviceChoosesUpdate: true});
 
