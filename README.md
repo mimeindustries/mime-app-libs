@@ -25,7 +25,9 @@ These build the browser UI that each robot's WiFi firmware serves, into `dist/<t
 Each build has:
 
 - `web.h`: the main page, favicon, `base.css/js` and the built-in drag and drop UI (`BuiltinUI.css/js`), gzipped
-  and written as PROGMEM byte arrays. It replaces the sketch's `web.h` and is compiled into the firmware.
+  and written as PROGMEM byte arrays. It replaces the sketch's `web.h` and is compiled into the firmware. It starts
+  with a comment giving the date and time it was built and the branch and commit it came from, so you can check
+  which UI a sketch is about to compile in.
 - `data/`: the apps (Blockly, JavaScript, Python, Snap!, and on Mirobot also Point & Click and Remote Control),
   the code editor, `apps.json` and media. It replaces the sketch's `data/` folder and is uploaded to the board's
   filesystem.
