@@ -1,58 +1,174 @@
-#control{
-  .control{
-    padding:10px 20px;
-    
-    label{
-      display:block;
-      padding-bottom:5px;
-    }
+// The MeArm joint control panel (menus/MeArmControlMenu.js)
 
-    .range{
-      color:#666;
-      font-size:80%;
-    }
-  }
-  
-  .slider{
-    width:200px;
-  }
-  
+$mearm-blue: #082D68;
+$track: #E1E5EC;
+$muted: #6B7280;
+
+#control{
+  // Angle readouts next to the icon in the header
   .value{
     display:inline-block;
     font-size:80%;
     width:40px;
     color:#333;
-    
+
     .label{
       padding-bottom:2px;
       color:#666;
     }
   }
 
-  // Keep the panel above the other header buttons if the header wraps
   .wrapper{
     z-index:10;
+    cursor:default;
+    box-shadow:0 6px 20px rgba(0,0,0,0.18);
+    border-radius:0 0 6px 6px;
+  }
+
+  .panel{
+    width:320px;
+    padding:14px 18px 16px;
+    box-sizing:border-box;
+    color:#222;
+  }
+
+  .panelHead{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:6px;
+
+    .title{
+      font-weight:bold;
+      font-size:15px;
+    }
+  }
+
+  .hint{
+    font-size:12px;
+    color:$muted;
+    margin:0 0 4px;
+    line-height:1.4;
+  }
+
+  // Normal and Adjust limits modes show different parts of the panel
+  .editOnly{ display:none; }
+  &.editing .editOnly{ display:block; }
+  &.editing .buttons.editOnly{ display:flex; }
+  &.editing .normalOnly{ display:none; }
+
+  .joint{
+    padding:12px 0 2px;
+  }
+
+  .jointHead{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:12px;
+
+    .name{ font-size:14px; }
+    .angle{
+      font-size:14px;
+      font-weight:bold;
+      font-variant-numeric:tabular-nums;
+      color:$mearm-blue;
+    }
+  }
+
+  .ends{
+    display:flex;
+    justify-content:space-between;
+    font-size:11px;
+    color:$muted;
+    margin-top:8px;
+  }
+
+  button{
+    font:inherit;
+    font-size:13px;
+    padding:6px 12px;
+    border-radius:4px;
+    border:1px solid #C8CDD5;
+    background:#fff;
+    color:#222;
+    cursor:pointer;
+
+    &:hover{ background:#F2F4F7; }
+
+    &.primary{
+      background:$mearm-blue;
+      border-color:$mearm-blue;
+      color:#fff;
+      &:hover{ background:lighten($mearm-blue, 10%); }
+    }
+  }
+
+  .buttons{
+    gap:8px;
+    margin-top:16px;
+    .spacer{ flex:1; }
+  }
+
+  // ---- Sliders (overrides the noUiSlider defaults) ----
+
+  .slider{
+    margin:0 11px;   // room for the handle at each end
+  }
+
+  .noUi-target{
+    background:$track;
+    border:0;
+    border-radius:3px;
+    box-shadow:none;
+  }
+
+  .noUi-horizontal{
+    height:6px;
+  }
+
+  .noUi-connect{
+    background:$mearm-blue;
+    box-shadow:none;
+  }
+
+  .noUi-horizontal .noUi-handle{
+    width:22px;
+    height:22px;
+    left:-11px;
+    top:-8px;
+    border-radius:50%;
+    border:2px solid $mearm-blue;
+    background:#fff;
+    box-shadow:0 1px 4px rgba(0,0,0,0.25);
+    cursor:grab;
+    &:before, &:after{ display:none; }
+  }
+
+  .noUi-active{
+    box-shadow:0 0 0 6px rgba(8, 45, 104, 0.15) !important;
+    cursor:grabbing;
   }
 }
 
-// On narrow screens show just the icon, and the angle readouts would make the
-// header wrap. The sliders still show each joint's position.
+// On narrow screens show just the icon, as the angle readouts would make the
+// header wrap. The panel opens from the right edge of its button, which would
+// push it off the left of the screen, so pin it across the width instead.
 @media (max-width: 600px){
   #control .value{
     display:none;
   }
 
-  // The panel opens from the right edge of its button, which would push it
-  // off the left of the screen: pin it across the width instead
   #menu #control .wrapper{
     position:fixed;
     left:8px;
     right:8px;
     top:60px;
     margin-top:0;
+    border-radius:6px;
   }
 
-  #control .slider{
+  #control .panel{
     width:auto;
   }
 }
