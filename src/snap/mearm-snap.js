@@ -56,12 +56,12 @@ Process.prototype.mearmMoveBaseTo = function (angle) {
   this.pushContext();
 }
 
-Process.prototype.mearmMoveLowerTo = function (angle) {
+Process.prototype.mearmMoveRightTo = function (angle) {
   if(!mearm.ready()) return;
   if (typeof this.context.proceed === 'undefined') {
     var self = this;
     this.context.proceed = false;
-    mearm.moveLowerTo(angle, function(state, msg){
+    mearm.moveRightTo(angle, function(state, msg){
       if(state === 'complete' && self.context){
         self.context.proceed = true;
       }
@@ -74,12 +74,12 @@ Process.prototype.mearmMoveLowerTo = function (angle) {
   this.pushContext();
 }
 
-Process.prototype.mearmMoveUpperTo = function (angle) {
+Process.prototype.mearmMoveLeftTo = function (angle) {
   if(!mearm.ready()) return;
   if (typeof this.context.proceed === 'undefined') {
     var self = this;
     this.context.proceed = false;
-    mearm.moveUpperTo(angle, function(state, msg){
+    mearm.moveLeftTo(angle, function(state, msg){
       if(state === 'complete' && self.context){
         self.context.proceed = true;
       }

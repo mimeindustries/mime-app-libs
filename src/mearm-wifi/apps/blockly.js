@@ -15,8 +15,8 @@ var init = function(){
       '<xml id="toolbox" style="display: none">' +
       '  <category name="MeArm" colour="0">' +
       '    <block type="mearm_moveBaseTo"><value name="ANGLE"><block type="math_number"><field name="NUM">0</field></block></value></block>' +
-      '    <block type="mearm_moveLowerTo"><value name="ANGLE"><block type="math_number"><field name="NUM">45</field></block></value></block>' +
-      '    <block type="mearm_moveUpperTo"><value name="ANGLE"><block type="math_number"><field name="NUM">45</field></block></value></block>' +
+      '    <block type="mearm_moveRightTo"><value name="ANGLE"><block type="math_number"><field name="NUM">45</field></block></value></block>' +
+      '    <block type="mearm_moveLeftTo"><value name="ANGLE"><block type="math_number"><field name="NUM">45</field></block></value></block>' +
       '    <block type="mearm_moveGripTo"><value name="ANGLE"><block type="math_number"><field name="NUM">90</field></block></value></block>' +
       '    <block type="mearm_openGrip"></block>' +
       '    <block type="mearm_closeGrip"></block>' +

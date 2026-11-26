@@ -52,11 +52,11 @@ function MearmRunner(mearm){
   this.moveBaseTo = function(angle, el){
     this.stack.push(runCmd(function(){ self.mearm.moveBaseTo(angle, done()) }, el));
   }
-  this.moveLowerTo = function(angle, el){
-    this.stack.push(runCmd(function(){ self.mearm.moveLowerTo(angle, done()) }, el));
+  this.moveRightTo = function(angle, el){
+    this.stack.push(runCmd(function(){ self.mearm.moveRightTo(angle, done()) }, el));
   }
-  this.moveUpperTo = function(angle, el){
-    this.stack.push(runCmd(function(){ self.mearm.moveUpperTo(angle, done()) }, el));
+  this.moveLeftTo = function(angle, el){
+    this.stack.push(runCmd(function(){ self.mearm.moveLeftTo(angle, done()) }, el));
   }
   this.moveGripTo = function(angle, el){
     this.stack.push(runCmd(function(){ self.mearm.moveGripTo(angle, done()) }, el));

@@ -259,8 +259,8 @@ var MeArm = function(url){
   this.addCmd('openGrip');
   this.addCmd('closeGrip');
   this.addCmd('moveBaseTo');
-  this.addCmd('moveLowerTo');
-  this.addCmd('moveUpperTo');
+  this.addCmd('moveRightTo');
+  this.addCmd('moveLeftTo');
   this.addCmd('moveGripTo');
   this.addCmd('getServoState');
 }

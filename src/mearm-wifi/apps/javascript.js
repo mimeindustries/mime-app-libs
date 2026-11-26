@@ -8,18 +8,18 @@ var init = function(){
           'function wave_arm(times) {\n' +
           '    var i;\n' +
           '    for (i = 0; i < times; i++) {\n' +
-          '        mearm.moveLowerTo(85);\n' +
-          '        mearm.moveUpperTo(0);\n' +
+          '        mearm.moveRightTo(85);\n' +
+          '        mearm.moveLeftTo(0);\n' +
           '        mearm.moveBaseTo(85);\n' +
           '        mearm.openGrip();\n' +
           '        mearm.closeGrip();\n' +
           '        mearm.moveBaseTo(-85);\n' +
-          '        mearm.moveLowerTo(20);\n' +
+          '        mearm.moveRightTo(20);\n' +
           '        mearm.moveBaseTo(0);\n' +
           '        mearm.openGrip();\n' +
           '        mearm.closeGrip();\n' +
-          '        mearm.moveLowerTo(85);\n' +
-          '        mearm.moveUpperTo(0);\n' +
+          '        mearm.moveRightTo(85);\n' +
+          '        mearm.moveLeftTo(0);\n' +
           '    }\n' +
           '}\n' +
           '\n' +
@@ -32,8 +32,8 @@ var init = function(){
           '    <li><em>mearm.openGrip()</em> - <span data-l10n=":js-openGrip-help">open the grip</span></li>' +
           '    <li><em>mearm.closeGrip()</em> - <span data-l10n=":js-closeGrip-help">close the grip</span></li>' +
           '    <li><em>mearm.moveBaseTo(angle)</em> - <span data-l10n=":js-moveBaseTo-help">turn the base to the angle</span></li>' +
-          '    <li><em>mearm.moveLowerTo(angle)</em> - <span data-l10n=":js-moveLowerTo-help">turn the lower part to the angle</span></li>' +
-          '    <li><em>mearm.moveUpperTo(angle)</em> - <span data-l10n=":js-moveUpperTo-help">turn the upper part to the angle</span></li>' +
+          '    <li><em>mearm.moveRightTo(angle)</em> - <span data-l10n=":js-moveRightTo-help">turn the right part to the angle</span></li>' +
+          '    <li><em>mearm.moveLeftTo(angle)</em> - <span data-l10n=":js-moveLeftTo-help">turn the left part to the angle</span></li>' +
           '    <li><em>mearm.moveGripTo(angle)</em> - <span data-l10n=":js-moveGripTo-help">turn the grip to the angle</span></li>' +
           '  </ul>' +
           '</div>' +

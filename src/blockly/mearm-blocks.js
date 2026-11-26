@@ -23,7 +23,7 @@ var tokenise = function(str){
 
 Blockly.Mearm = Blockly.JavaScript;
 
-['Base', 'Lower', 'Upper', 'Grip'].map(function(servo){
+['Base', 'Right', 'Left', 'Grip'].map(function(servo){
   Blockly.Blocks['mearm_move' + servo + 'To'] = {
     init: function() {
       var str = l(':move' + servo + 'To-cmd');

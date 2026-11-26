@@ -14,7 +14,7 @@ var init = function(){
             name: 'servo',
             input: 'option',
             default: 'base',
-            values: ['Base', 'Lower', 'Upper', 'Grip']
+            values: ['Base', 'Right', 'Left', 'Grip']
           },
           angle: {
             name: 'angle',

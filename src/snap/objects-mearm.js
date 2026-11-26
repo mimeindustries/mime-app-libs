@@ -1208,18 +1208,18 @@ SpriteMorph.prototype.initBlocks = function () {
           spec: 'move base to %n degrees',
           defaults: [0]
         },
-        mearmMoveLowerTo: {
+        mearmMoveRightTo: {
           only: Process,
           type: 'command',
           category: 'mearm',
-          spec: 'move lower to %n degrees',
+          spec: 'move right to %n degrees',
           defaults: [0]
         },
-        mearmMoveUpperTo: {
+        mearmMoveLeftTo: {
           only: Process,
           type: 'command',
           category: 'mearm',
-          spec: 'move upper to %n degrees',
+          spec: 'move left to %n degrees',
           defaults: [0]
         },
         mearmMoveGripTo: {
@@ -2193,8 +2193,8 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('mearmOpenGrip'));
         blocks.push(block('mearmCloseGrip'));
         blocks.push(block('mearmMoveBaseTo'));
-        blocks.push(block('mearmMoveLowerTo'));
-        blocks.push(block('mearmMoveUpperTo'));
+        blocks.push(block('mearmMoveRightTo'));
+        blocks.push(block('mearmMoveLeftTo'));
         blocks.push(block('mearmMoveGripTo'));
         blocks.push(block('mearmStop'));
 
@@ -5392,8 +5392,8 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('mearmOpenGrip'));
         blocks.push(block('mearmCloseGrip'));
         blocks.push(block('mearmMoveBaseTo'));
-        blocks.push(block('mearmMoveLowerTo'));
-        blocks.push(block('mearmMoveUpperTo'));
+        blocks.push(block('mearmMoveRightTo'));
+        blocks.push(block('mearmMoveLeftTo'));
         blocks.push(block('mearmMoveGripTo'));
         blocks.push(block('mearmStop'));
 

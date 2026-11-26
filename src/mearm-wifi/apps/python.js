@@ -13,18 +13,18 @@ var init = function(){
           '\n' +
           'def wave_arm(times):\n' +
           '    for i in range(times):\n' +
-          '        m.moveLowerTo(85)\n' +
-          '        m.moveUpperTo(0)\n' +
+          '        m.moveRightTo(85)\n' +
+          '        m.moveLeftTo(0)\n' +
           '        m.moveBaseTo(85)\n' +
           '        m.openGrip()\n' +
           '        m.closeGrip()\n' +
           '        m.moveBaseTo(-85)\n' +
-          '        m.moveLowerTo(20)\n' +
+          '        m.moveRightTo(20)\n' +
           '        m.moveBaseTo(0)\n' +
           '        m.openGrip()\n' +
           '        m.closeGrip()\n' +
-          '        m.moveLowerTo(85)\n' +
-          '        m.moveUpperTo(0)\n' +
+          '        m.moveRightTo(85)\n' +
+          '        m.moveLeftTo(0)\n' +
           '\n' +
           'wave_arm(1)\n' +
           '\n' +
@@ -37,8 +37,8 @@ var init = function(){
           '    <li><em>mearm.openGrip()</em> - <span data-l10n=":js-openGrip-help">open the grip</span></li>' +
           '    <li><em>mearm.closeGrip()</em> - <span data-l10n=":js-closeGrip-help">close the grip</span></li>' +
           '    <li><em>mearm.moveBaseTo(angle)</em> - <span data-l10n=":js-moveBaseTo-help">turn the base to the angle</span></li>' +
-          '    <li><em>mearm.moveLowerTo(angle)</em> - <span data-l10n=":js-moveLowerTo-help">turn the lower part to the angle</span></li>' +
-          '    <li><em>mearm.moveUpperTo(angle)</em> - <span data-l10n=":js-moveUpperTo-help">turn the upper part to the angle</span></li>' +
+          '    <li><em>mearm.moveRightTo(angle)</em> - <span data-l10n=":js-moveRightTo-help">turn the right part to the angle</span></li>' +
+          '    <li><em>mearm.moveLeftTo(angle)</em> - <span data-l10n=":js-moveLeftTo-help">turn the left part to the angle</span></li>' +
           '    <li><em>mearm.moveGripTo(angle)</em> - <span data-l10n=":js-moveGripTo-help">turn the grip to the angle</span></li>' +
           '  </ul>' +
           '</div>' +
